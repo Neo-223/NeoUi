@@ -1,5 +1,5 @@
--- Neo GUI Library
--- by you :)
+-- Neo GUI Library (fixed)
+-- Load with: local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/you/repo/main/NeoLib.lua"))()
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -19,21 +19,24 @@ local colors = {
     Success    = Color3.fromRGB(0, 200, 120),
 }
 
--- Highlight tabs
-local function highlightTab(sidebar, selectedBtn)
-    for _, btn in ipairs(sidebar:GetChildren()) do
-        if btn:IsA("TextButton") then
-            btn.BackgroundColor3 = colors.Button
+-- Utilities
+local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
+    for _, child in ipairs(sidebar:GetChildren()) do
+        if child:IsA("TextButton") then
+            child.BackgroundColor3 = colors.Button
         end
     end
     selectedBtn.BackgroundColor3 = colors.Accent
 end
 
--- Create Window
+----------------------------------------------------------------------
+-- Window
+----------------------------------------------------------------------
 function Neo:CreateWindow(title: string)
     local window = {}
     setmetatable(window, Neo)
 
+    -- ScreenGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NeoModMenu"
     screenGui.ResetOnSpawn = false
@@ -41,9 +44,10 @@ function Neo:CreateWindow(title: string)
     screenGui.Parent = PlayerGui
     window.Gui = screenGui
 
+    -- Main frame (draggable like your original)
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
-    mainFrame.Position = UDim2.new(0.5, -220, 0.5, -200)
+    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
     mainFrame.BackgroundColor3 = colors.Background
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
@@ -52,10 +56,11 @@ function Neo:CreateWindow(title: string)
     mainFrame.Parent = screenGui
     window.MainFrame = mainFrame
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = mainFrame
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 10)
+    mainCorner.Parent = mainFrame
 
+    -- Topbar
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundColor3 = colors.Topbar
@@ -73,6 +78,7 @@ function Neo:CreateWindow(title: string)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
+    -- Sidebar
     local sidebar = Instance.new("Frame")
     sidebar.Size = UDim2.new(0, 150, 1, -40)
     sidebar.Position = UDim2.new(0, 0, 0, 40)
@@ -81,12 +87,19 @@ function Neo:CreateWindow(title: string)
     sidebar.Parent = mainFrame
     window.Sidebar = sidebar
 
+    local sidebarPadding = Instance.new("UIPadding")
+    sidebarPadding.PaddingTop = UDim.new(0, 8)
+    sidebarPadding.PaddingLeft = UDim.new(0, 10)
+    sidebarPadding.PaddingRight = UDim.new(0, 10)
+    sidebarPadding.Parent = sidebar
+
     local sidebarLayout = Instance.new("UIListLayout")
     sidebarLayout.FillDirection = Enum.FillDirection.Vertical
     sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     sidebarLayout.Padding = UDim.new(0, 6)
     sidebarLayout.Parent = sidebar
 
+    -- Content
     local contentFrame = Instance.new("Frame")
     contentFrame.Size = UDim2.new(1, -150, 1, -40)
     contentFrame.Position = UDim2.new(0, 150, 0, 40)
@@ -96,15 +109,27 @@ function Neo:CreateWindow(title: string)
     window.Content = contentFrame
 
     window.Pages = {}
+    window._hasDefaultTab = false -- auto-select first tab
+
+    -- Optional helpers
+    function window:Toggle()
+        self.MainFrame.Visible = not self.MainFrame.Visible
+    end
+    function window:Destroy()
+        if self.Gui then self.Gui:Destroy() end
+    end
+
     return window
 end
 
+----------------------------------------------------------------------
 -- Tabs
+----------------------------------------------------------------------
 function Neo:CreateTab(name: string)
     local tab = {}
-    tab.Name = name
     setmetatable(tab, Neo)
 
+    -- Sidebar button
     local btn = Instance.new("TextButton")
     btn.Name = name .. "Tab"
     btn.Size = UDim2.new(1, 0, 0, 35)
@@ -121,6 +146,7 @@ function Neo:CreateTab(name: string)
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
+    -- Page
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -141,20 +167,31 @@ function Neo:CreateTab(name: string)
     padding.Parent = page
 
     self.Pages[name] = page
-    tab.Page = page
 
-    btn.MouseButton1Click:Connect(function()
-        for _, p in pairs(self.Pages) do
-            p.Visible = false
-        end
+    -- allow components to access the main frame (for drag-disable)
+    tab.Page = page
+    tab._mainFrame = self.MainFrame
+
+    local function selectThis()
+        for _, p in pairs(self.Pages) do p.Visible = false end
         page.Visible = true
         highlightTab(self.Sidebar, btn)
-    end)
+    end
+
+    btn.MouseButton1Click:Connect(selectThis)
+
+    -- Auto-select first created tab (matches your original default)
+    if not self._hasDefaultTab then
+        self._hasDefaultTab = true
+        selectThis()
+    end
 
     return tab
 end
 
--- Label
+----------------------------------------------------------------------
+-- Components
+----------------------------------------------------------------------
 function Neo:CreateLabel(text: string)
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -20, 0, 25)
@@ -168,8 +205,7 @@ function Neo:CreateLabel(text: string)
     return lbl
 end
 
--- Button
-function Neo:CreateButton(text: string, callback)
+function Neo:CreateButton(text: string, callback: ()->())
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 260, 0, 30)
     btn.BackgroundColor3 = colors.Button
@@ -185,12 +221,14 @@ function Neo:CreateButton(text: string, callback)
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
-    btn.MouseButton1Click:Connect(callback)
+    btn.MouseButton1Click:Connect(function()
+        if callback then callback() end
+    end)
+
     return btn
 end
 
--- Toggle
-function Neo:CreateToggle(text: string, callback)
+function Neo:CreateToggle(text: string, callback: (boolean)->())
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 265, 0, 30)
     frame.BackgroundTransparency = 1
@@ -223,14 +261,13 @@ function Neo:CreateToggle(text: string, callback)
     box.MouseButton1Click:Connect(function()
         state = not state
         box.BackgroundColor3 = state and colors.Success or colors.Button
-        callback(state)
+        if callback then callback(state) end
     end)
 
     return frame
 end
 
--- Slider
-function Neo:CreateSlider(text, min, max, defaultValue, callback)
+function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: number, callback: (number)->())
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 260, 0, 40)
     frame.BackgroundTransparency = 1
@@ -265,24 +302,31 @@ function Neo:CreateSlider(text, min, max, defaultValue, callback)
     bar.Parent = frame
 
     local fill = Instance.new("Frame")
-    local startAlpha = (defaultValue - min) / (max - min)
-    fill.Size = UDim2.new(startAlpha, 0, 1, 0)
+    local startAlpha = (defaultValue - min) / math.max(1, (max - min))
+    fill.Size = UDim2.new(math.clamp(startAlpha, 0, 1), 0, 1, 0)
     fill.BackgroundColor3 = colors.Accent
     fill.BorderSizePixel = 0
     fill.Parent = bar
 
     local dragging = false
-    local function updateFromMouse(px)
-        local relX = math.clamp((px - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-        fill.Size = UDim2.new(relX, 0, 1, 0)
-        local value = math.floor(min + (max - min) * relX + 0.5)
+    local function setFromAlpha(alpha: number)
+        alpha = math.clamp(alpha, 0, 1)
+        fill.Size = UDim2.new(alpha, 0, 1, 0)
+        local value = math.floor(min + (max - min) * alpha + 0.5)
         valLbl.Text = tostring(value)
-        callback(value)
+        if callback then callback(value) end
+    end
+
+    local function updateFromMouse(px: number)
+        local relX = (px - bar.AbsolutePosition.X) / bar.AbsoluteSize.X
+        setFromAlpha(relX)
     end
 
     bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
+            -- IMPORTANT: temporarily disable window dragging while sliding
+            if self._mainFrame then self._mainFrame.Active = false end
             updateFromMouse(input.Position.X)
         end
     end)
@@ -296,6 +340,7 @@ function Neo:CreateSlider(text, min, max, defaultValue, callback)
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
             dragging = false
+            if self._mainFrame then self._mainFrame.Active = true end
         end
     end)
 
