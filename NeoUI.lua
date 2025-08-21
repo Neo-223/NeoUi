@@ -1,5 +1,13 @@
--- Neo GUI Library (with Settings tab + Keybind release fix)
--- Load with: local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/you/repo/main/NeoLib.lua"))()
+-- Neo GUI Library (Settings tab pinned + original rebind flow + slider drag fix)
+-- Usage:
+-- local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/you/repo/main/NeoLib.lua"))()
+-- local win = Neo:CreateWindow("Neo")
+-- local demo = win:CreateTab("Demo")
+-- demo:CreateLabel("Demo Components")
+-- demo:CreateButton("Click Me", function() print("Button clicked!") end)
+-- demo:CreateToggle("Enable Feature", function(state) print("Toggle:", state) end)
+-- demo:CreateSlider("Value", 0, 100, 50, function(val) print("Slider:", val) end)
+-- -- Settings tab is auto-added at the bottom with Insert/Delete keybinds
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -19,7 +27,7 @@ local colors = {
     Success    = Color3.fromRGB(0, 200, 120),
 }
 
--- Utilities
+-- Utility: highlight selected tab
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
@@ -36,6 +44,12 @@ function Neo:CreateWindow(title: string)
     local window = {}
     setmetatable(window, Neo)
 
+    -- Session keybind state (matches original flow)
+    window._toggleKey = Enum.KeyCode.Insert
+    window._unloadKey = Enum.KeyCode.Delete
+    window._isBindingKey = false -- suppress global key actions while rebinding
+    window._suppressKeyCode = nil -- used only to know which key to watch for release
+
     -- ScreenGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NeoModMenu"
@@ -44,7 +58,7 @@ function Neo:CreateWindow(title: string)
     screenGui.Parent = PlayerGui
     window.Gui = screenGui
 
-    -- Main frame
+    -- Main frame (draggable like original)
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
     mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
@@ -109,28 +123,31 @@ function Neo:CreateWindow(title: string)
     window.Content = contentFrame
 
     window.Pages = {}
-    window._hasDefaultTab = false
+    window._hasDefaultTab = false -- auto-select first non-settings tab
 
     function window:Toggle()
         self.MainFrame.Visible = not self.MainFrame.Visible
     end
     function window:Destroy()
+        if self._inputConn then self._inputConn:Disconnect() end
         if self.Gui then self.Gui:Destroy() end
     end
 
-    -- Create Settings Tab at bottom automatically
-    local function createSettingsTab()
-        local tab = window:CreateTab("Settings", true) -- mark as settings
+    -- Global input (mirrors original): blocked while rebinding
+    window._inputConn = UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if window._isBindingKey then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == window._toggleKey then
+                window:Toggle()
+            elseif input.KeyCode == window._unloadKey then
+                window:Destroy()
+            end
+        end
+    end)
 
-        tab:CreateKeybind("Toggle Menu", Enum.KeyCode.Insert, function()
-            window:Toggle()
-        end)
-
-        tab:CreateKeybind("Unload Menu", Enum.KeyCode.Delete, function()
-            window:Destroy()
-        end)
-    end
-    window._createSettings = createSettingsTab
+    -- Auto-create a Settings tab pinned to bottom
+    window:_createSettingsTab()
 
     return window
 end
@@ -156,7 +173,7 @@ function Neo:CreateTab(name: string, isSettings: boolean)
     btn.Parent = self.Sidebar
 
     if isSettings then
-        btn.LayoutOrder = 9999 -- force bottom
+        btn.LayoutOrder = 1_000_000 -- force to bottom
     end
 
     local corner = Instance.new("UICorner")
@@ -184,8 +201,10 @@ function Neo:CreateTab(name: string, isSettings: boolean)
     padding.Parent = page
 
     self.Pages[name] = page
+
     tab.Page = page
-    tab._mainFrame = self.MainFrame
+    tab._mainFrame = self.MainFrame -- for slider drag-disabling
+    tab._window = self             -- for keybind state access
 
     local function selectThis()
         for _, p in pairs(self.Pages) do p.Visible = false end
@@ -360,67 +379,97 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
--- Rebind Component (waits for key release)
-function Neo:CreateKeybind(text: string, defaultKey: Enum.KeyCode, callback: ()->())
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 265, 0, 30)
-    frame.BackgroundTransparency = 1
-    frame.Parent = self.Page
-
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(0.6, 0, 1, 0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 16
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = frame
+----------------------------------------------------------------------
+-- Keybind row that MATCHES your original rebind behavior
+-- - Click shows "Press a key..."
+-- - On first InputBegan(Keyboard), updates the key and text immediately
+-- - Keeps rebinding mode until the SAME key is released (InputEnded)
+-- - Suppresses global actions while rebinding (via window._isBindingKey)
+----------------------------------------------------------------------
+local function createRebindRow(tab, labelText: string, getKey: ()->Enum.KeyCode, setKey: (Enum.KeyCode)->())
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(0, 260, 0, 30)
+    row.BackgroundTransparency = 1
+    row.Parent = tab.Page
 
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.4, -5, 1, 0)
-    btn.Position = UDim2.new(0.6, 5, 0, 0)
+    btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundColor3 = colors.Button
-    btn.Text = "["..defaultKey.Name.."]"
+    btn.Text = string.format("%s: %s", labelText, getKey().Name)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 14
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
-    btn.Parent = frame
+    btn.Parent = row
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
-    local currentKey = defaultKey
-    local waiting = false
-
-    local function bindInput(input)
-        if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
-            callback()
-        end
-    end
-
-    UserInputService.InputBegan:Connect(bindInput)
-
     btn.MouseButton1Click:Connect(function()
-        if waiting then return end
-        waiting = true
-        btn.Text = "Press a key..."
+        btn.Text = labelText .. ": Press a key..."
+        local window = tab._window
+        window._isBindingKey = true
+        window._suppressKeyCode = nil
 
-        local releaseConn
-        releaseConn = UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.Keyboard then
-                currentKey = input.KeyCode
-                btn.Text = "["..currentKey.Name.."]"
-                waiting = false
-                releaseConn:Disconnect()
+        local beganConn, endedConn
+        beganConn = UserInputService.InputBegan:Connect(function(input, gpe)
+            if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode ~= Enum.KeyCode.Unknown then
+                setKey(input.KeyCode) -- update NOW (like your original)
+                btn.Text = string.format("%s: %s", labelText, getKey().Name)
+                window._suppressKeyCode = input.KeyCode
+                if endedConn then endedConn:Disconnect() end
+                endedConn = UserInputService.InputEnded:Connect(function(endInput, _)
+                    if endInput.UserInputType == Enum.UserInputType.Keyboard and endInput.KeyCode == window._suppressKeyCode then
+                        window._isBindingKey = false
+                        window._suppressKeyCode = nil
+                        if beganConn then beganConn:Disconnect() end
+                        if endedConn then endedConn:Disconnect() end
+                    end
+                end)
             end
         end)
     end)
 
-    return frame
+    return row
+end
+
+----------------------------------------------------------------------
+-- Settings Tab (auto-added & pinned to bottom)
+----------------------------------------------------------------------
+function Neo:_createSettingsTab()
+    if self._settingsCreated then return end
+    self._settingsCreated = true
+
+    local settings = self:CreateTab("Settings", true)
+
+    -- Header label (optional, mirrors your original)
+    local header = Instance.new("TextLabel")
+    header.Size = UDim2.new(1, -20, 0, 25)
+    header.BackgroundTransparency = 1
+    header.Text = "Settings"
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 18
+    header.TextColor3 = Color3.fromRGB(255, 255, 255)
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.Parent = settings.Page
+
+    -- Toggle Menu rebind (Insert by default)
+    createRebindRow(settings, "Toggle Menu", function()
+        return self._toggleKey
+    end, function(newKey: Enum.KeyCode)
+        self._toggleKey = newKey
+    end)
+
+    -- Unload Menu rebind (Delete by default)
+    createRebindRow(settings, "Unload Menu", function()
+        return self._unloadKey
+    end, function(newKey: Enum.KeyCode)
+        self._unloadKey = newKey
+    end)
+
+    return settings
 end
 
 return Neo
