@@ -57,8 +57,4 @@ end)
 tab:CreateSlider("Slider", 0, 100, 50, function(value)
     print("Slider value:", value)
 end)
-
-tab:CreateRebind("Custom Action", Enum.KeyCode.F, function(key)
-    print("Rebound key to:", key.Name)
-end)
 ```
