@@ -262,7 +262,7 @@ function Neo:_createSettingsTab()
     layout.Parent = page
 
 local padding = Instance.new("UIPadding")
-padding.PaddingTop = UDim.new(0, 40) -- was 25, bump up to 40
+padding.PaddingTop = UDim.new(0, 400) -- was 25, bump up to 40
 padding.PaddingLeft = UDim.new(0, 15)
 padding.PaddingBottom = UDim.new(0, 10) -- optional, keeps spacing clean
 padding.Parent = page
