@@ -1,14 +1,3 @@
--- Neo GUI Library (complete)
--- Load with:
---   local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/Neo-223/NeoUi/refs/heads/main/NeoUI.lua"))()
---
--- Original look preserved (title bar, colors), plus:
--- - Scrollable content area (hidden scrollbar, 4px bottom gap)
--- - Scrollable sidebar when too many tabs (hidden scrollbar)
--- - Slider drag fix (window doesn’t move while dragging)
--- - Auto "Settings" tab pinned to bottom with rebinds
--- - Rebinds work like your original: capture key on InputBegan, finalize on InputEnded
-
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
@@ -17,7 +6,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Neo = {}
 Neo.__index = Neo
 
--- Color palette (exactly like your original)
+-- Color palette
 local colors = {
     Background = Color3.fromRGB(18, 18, 22),   -- main background
     Sidebar    = Color3.fromRGB(28, 28, 34),   -- sidebar
@@ -40,7 +29,6 @@ local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     selectedBtn.BackgroundColor3 = colors.Accent
 end
 
--- Rebind row (matches your original behavior: set on key press, finalize on release)
 local function createRebindRow(parent: Instance, labelText: string, defaultKey: Enum.KeyCode, onSet: (Enum.KeyCode)->(), state)
     local row = Instance.new("Frame")
     row.Size = UDim2.new(0, 260, 0, 30)
@@ -63,7 +51,7 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
     corner.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
-        -- Begin binding flow (like your menu)
+
         btn.Text = labelText .. ": Press a key..."
         state.isBindingKey = true
         state.suppressKeyCode = nil
@@ -71,13 +59,13 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
         local beganConn, endedConn
         beganConn = UserInputService.InputBegan:Connect(function(input, gpe)
             if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode ~= Enum.KeyCode.Unknown then
-                -- Tentatively set the new key, update button immediately (like original)
+               
                 onSet(input.KeyCode)
                 btn.Text = labelText .. ": " .. input.KeyCode.Name
-                -- Remember which key must be released before we end binding
+                
                 state.suppressKeyCode = input.KeyCode
 
-                -- Wait for release of the SAME key to finish binding (like original)
+                
                 if endedConn then endedConn:Disconnect() end
                 endedConn = UserInputService.InputEnded:Connect(function(endInput, _)
                     if endInput.UserInputType == Enum.UserInputType.Keyboard and endInput.KeyCode == state.suppressKeyCode then
@@ -101,7 +89,7 @@ function Neo:CreateWindow(title: string)
     local window = {}
     setmetatable(window, Neo)
 
-    -- Shared state for binding logic & key handling
+   
     window._state = {
         isBindingKey = false,
         suppressKeyCode = nil,
@@ -109,7 +97,7 @@ function Neo:CreateWindow(title: string)
         unloadKey = Enum.KeyCode.Delete,
     }
 
-    -- ScreenGui
+   
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NeoModMenu"
     screenGui.ResetOnSpawn = false
@@ -117,7 +105,7 @@ function Neo:CreateWindow(title: string)
     screenGui.Parent = PlayerGui
     window.Gui = screenGui
 
-    -- Main frame (draggable)
+    
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
     mainFrame.Position = UDim2.new(0.5, -220, 0.5, -200)
@@ -133,7 +121,7 @@ function Neo:CreateWindow(title: string)
     mainCorner.CornerRadius = UDim.new(0, 10)
     mainCorner.Parent = mainFrame
 
-    -- Topbar (exact look)
+    
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundColor3 = colors.Topbar
@@ -151,7 +139,7 @@ function Neo:CreateWindow(title: string)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
-    -- Sidebar (ScrollingFrame, hidden scrollbar)
+    
     local sidebar = Instance.new("ScrollingFrame")
     sidebar.Name = "Sidebar"
     sidebar.Size = UDim2.new(0, 150, 1, -40)
@@ -177,7 +165,7 @@ function Neo:CreateWindow(title: string)
     sidebarLayout.Padding = UDim.new(0, 6)
     sidebarLayout.Parent = sidebar
 
-    -- Content (ScrollingFrame, hidden scrollbar + 4px bottom gap)
+    
     local contentHolder = Instance.new("ScrollingFrame")
     contentHolder.Name = "ContentHolder"
     contentHolder.Size = UDim2.new(1, -150, 1, -40)
@@ -191,19 +179,19 @@ function Neo:CreateWindow(title: string)
     window.Content = contentHolder
 
     local chPadding = Instance.new("UIPadding")
-    chPadding.PaddingTop = UDim.new(0, 0)      -- tab pages add their own 15px top
-    chPadding.PaddingLeft = UDim.new(0, 0)     -- tab pages add their own 15px left
-    chPadding.PaddingBottom = UDim.new(0, 4)   -- 4px gap before scrolling stops
+    chPadding.PaddingTop = UDim.new(0, 0)      
+    chPadding.PaddingLeft = UDim.new(0, 0)     
+    chPadding.PaddingBottom = UDim.new(0, 4)   
     chPadding.Parent = contentHolder
 
-    -- Internals
+   
     window.Pages = {}
     window._hasDefaultTab = false
     window._tabOrder = 0
     window._settingsCreated = false
     window._connections = {}
 
-    -- Public helpers
+    
     function window:Toggle()
         self.MainFrame.Visible = not self.MainFrame.Visible
     end
@@ -214,7 +202,7 @@ function Neo:CreateWindow(title: string)
         if self.Gui then self.Gui:Destroy() end
     end
 
-    -- Global key handling (session only), mirroring original (ignore while binding)
+    
     table.insert(window._connections, UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if window._state.isBindingKey then return end
@@ -227,7 +215,6 @@ function Neo:CreateWindow(title: string)
         end
     end))
 
-    -- Create the Settings tab immediately, but keep it last and don’t auto-select
     window:_createSettingsTab()
 
     return window
@@ -243,7 +230,6 @@ function Neo:_createSettingsTab()
     local tab = {}
     setmetatable(tab, Neo)
 
-    -- Sidebar button (pinned to bottom via large LayoutOrder)
     local btn = Instance.new("TextButton")
     btn.Name = "SettingsTab"
     btn.Size = UDim2.new(1, 0, 0, 35)
@@ -261,7 +247,6 @@ function Neo:_createSettingsTab()
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
-    -- Settings page (Frame inside content holder)
     local page = Instance.new("Frame")
     page.Name = "SettingsPage"
     page.Size = UDim2.new(1, 0, 0, 0)
@@ -294,7 +279,6 @@ function Neo:_createSettingsTab()
 
     btn.MouseButton1Click:Connect(selectThis)
 
-    -- Settings content: Keybinds (Insert & Delete by default)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, -20, 0, 25)
     label.BackgroundTransparency = 1
@@ -315,7 +299,7 @@ function Neo:_createSettingsTab()
 end
 
 function Neo:CreateTab(name: string)
-    -- Prevent name collision with Settings
+    
     if string.lower(name) == "settings" then
         warn("[Neo] 'Settings' tab name is reserved by the library. Your tab will be named 'Settings (Custom)'.")
         name = "Settings (Custom)"
@@ -324,7 +308,6 @@ function Neo:CreateTab(name: string)
     local tab = {}
     setmetatable(tab, Neo)
 
-    -- Sidebar button
     local btn = Instance.new("TextButton")
     btn.Name = name .. "Tab"
     btn.Size = UDim2.new(1, 0, 0, 35)
@@ -343,7 +326,6 @@ function Neo:CreateTab(name: string)
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
-    -- Page (Frame inside content holder)
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 0, 0)
@@ -376,7 +358,6 @@ function Neo:CreateTab(name: string)
 
     btn.MouseButton1Click:Connect(selectThis)
 
-    -- Auto-select the first non-settings tab
     if not self._hasDefaultTab then
         self._hasDefaultTab = true
         selectThis()
