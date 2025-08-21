@@ -233,8 +233,8 @@ function Neo:CreateTab(name: string, isSettings: boolean?)
     page.Visible = false
     page.BorderSizePixel = 0
     page.CanvasSize = UDim2.new(0, 0, 0, 0)
-    page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    page.ScrollBarThickness = 0  -- ✅ hides scrollbar
+    page.AutomaticCanvasSize = Enum.AutomaticSize.None
+    page.ScrollBarThickness = 0 -- ✅ hides scrollbar
     page.Parent = self.Content
 
     local layout = Instance.new("UIListLayout")
@@ -249,8 +249,12 @@ function Neo:CreateTab(name: string, isSettings: boolean?)
     padding.PaddingLeft = UDim.new(0, 15)
     padding.Parent = page
 
-    self.Pages[name] = page
+    -- ✅ Dynamic canvas resize with 2px gap at bottom
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 2)
+    end)
 
+    self.Pages[name] = page
     tab.Page = page
     tab._mainFrame = self.MainFrame
 
@@ -268,7 +272,7 @@ function Neo:CreateTab(name: string, isSettings: boolean?)
     end
 
     if isSettings then
-        btn.LayoutOrder = 9999
+        btn.LayoutOrder = 9999 -- settings always at bottom
     end
 
     return tab
