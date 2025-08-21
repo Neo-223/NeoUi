@@ -506,7 +506,6 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
-    -- Currently selected option
     local selected = options[1]
 
     -- Main dropdown box
@@ -517,6 +516,7 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     box.TextColor3 = Color3.fromRGB(255, 255, 255)
     box.Font = Enum.Font.Gotham
     box.TextSize = 14
+    box.TextXAlignment = Enum.TextXAlignment.Left
     box.BorderSizePixel = 0
     box.AutoButtonColor = false
     box.Parent = frame
@@ -524,17 +524,6 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = box
-
-    -- Dropdown arrow
-    local arrow = Instance.new("TextLabel")
-    arrow.Size = UDim2.new(0, 20, 1, 0)
-    arrow.Position = UDim2.new(1, -25, 0, 0)
-    arrow.BackgroundTransparency = 1
-    arrow.Text = "▾"
-    arrow.TextColor3 = Color3.fromRGB(200, 200, 200)
-    arrow.Font = Enum.Font.Gotham
-    arrow.TextSize = 14
-    arrow.Parent = box
 
     -- Dropdown list container
     local list = Instance.new("Frame")
@@ -565,7 +554,8 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     end
 
     local function openDropdown()
-        list:TweenSize(UDim2.new(1, 0, 0, #options * 28), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+        local totalHeight = #options * 28
+        list:TweenSize(UDim2.new(1, 0, 0, totalHeight), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
         expanded = true
     end
 
@@ -601,6 +591,7 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
         optBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         optBtn.Font = Enum.Font.Gotham
         optBtn.TextSize = 14
+        optBtn.TextXAlignment = Enum.TextXAlignment.Left
         optBtn.BorderSizePixel = 0
         optBtn.AutoButtonColor = false
         optBtn.Parent = list
