@@ -1,38 +1,35 @@
-local NeoUI = {}
-NeoUI.__index = NeoUI
+-- NeoModUI.lua
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local NeoModUI = {}
+NeoModUI.__index = NeoModUI
 
-local defaultToggleKey = Enum.KeyCode.Insert
-local defaultUnloadKey = Enum.KeyCode.Delete
-
-NeoUI.Colors = {
-    Sidebar = Color3.fromRGB(28, 28, 34),
-    Content = Color3.fromRGB(24, 24, 30),
-    Topbar = Color3.fromRGB(30, 30, 38),
-    ButtonIdle = Color3.fromRGB(45, 45, 55),
-    ButtonText = Color3.fromRGB(255, 255, 255),
-    ButtonHighlight = Color3.fromRGB(0, 170, 255),
-    TitleText = Color3.fromRGB(255, 255, 255),
+-- Color palette
+local colors = {
+    Sidebar           = Color3.fromRGB(28, 28, 34),
+    Content           = Color3.fromRGB(24, 24, 30),
+    Topbar            = Color3.fromRGB(30, 30, 38),
+    ButtonIdle        = Color3.fromRGB(45, 45, 55),
+    ButtonText        = Color3.fromRGB(255, 255, 255),
+    ButtonHighlight   = Color3.fromRGB(0, 170, 255),
+    TitleText         = Color3.fromRGB(255, 255, 255),
     SectionHeaderText = Color3.fromRGB(255, 255, 255),
-    LabelText = Color3.fromRGB(255, 255, 255),
-    ValueText = Color3.fromRGB(150, 200, 255),
-    ToggleOff = Color3.fromRGB(45, 45, 55),
-    ToggleOn = Color3.fromRGB(0, 200, 120),
-    SliderBar = Color3.fromRGB(45, 45, 55),
-    SliderFill = Color3.fromRGB(0, 170, 255),
-    Accent = Color3.fromRGB(0, 170, 255),
+    LabelText         = Color3.fromRGB(255, 255, 255),
+    ValueText         = Color3.fromRGB(150, 200, 255),
+    ToggleOff         = Color3.fromRGB(45, 45, 55),
+    ToggleOn          = Color3.fromRGB(0, 200, 120),
+    SliderBar         = Color3.fromRGB(45, 45, 55),
+    SliderFill        = Color3.fromRGB(0, 170, 255),
+    Accent            = Color3.fromRGB(0, 170, 255),
 }
 
-function NeoUI.new()
-    local self = setmetatable({}, NeoUI)
+-- NeoModUI constructor
+function NeoModUI.new(playerGui)
+    local self = setmetatable({}, NeoModUI)
 
+    self.playerGui = playerGui
     self.screenGui = Instance.new("ScreenGui")
-    self.screenGui.Name = "NeoUI"
-    self.screenGui.Parent = PlayerGui
+    self.screenGui.Name = "NeoModMenu"
+    self.screenGui.Parent = playerGui
     self.screenGui.ResetOnSpawn = false
     self.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -43,16 +40,15 @@ function NeoUI.new()
     self.mainFrame.BorderSizePixel = 0
     self.mainFrame.Active = true
     self.mainFrame.Draggable = true
-    self.mainFrame.Visible = true
     self.mainFrame.Parent = self.screenGui
 
-    local mainCorner = Instance.new("UICorner")
-    mainCorner.CornerRadius = UDim.new(0, 10)
-    mainCorner.Parent = self.mainFrame
+    self.mainCorner = Instance.new("UICorner")
+    self.mainCorner.CornerRadius = UDim.new(0, 10)
+    self.mainCorner.Parent = self.mainFrame
 
     self.topBar = Instance.new("Frame")
     self.topBar.Size = UDim2.new(1, 0, 0, 40)
-    self.topBar.BackgroundColor3 = NeoUI.Colors.Topbar
+    self.topBar.BackgroundColor3 = colors.Topbar
     self.topBar.BorderSizePixel = 0
     self.topBar.Parent = self.mainFrame
 
@@ -60,17 +56,17 @@ function NeoUI.new()
     self.titleLabel.Size = UDim2.new(1, -10, 1, 0)
     self.titleLabel.Position = UDim2.new(0, 10, 0, 0)
     self.titleLabel.BackgroundTransparency = 1
-    self.titleLabel.Text = "NeoUI"
+    self.titleLabel.Text = "Neo"
     self.titleLabel.Font = Enum.Font.GothamBold
     self.titleLabel.TextSize = 20
-    self.titleLabel.TextColor3 = NeoUI.Colors.TitleText
+    self.titleLabel.TextColor3 = colors.TitleText
     self.titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     self.titleLabel.Parent = self.topBar
 
     self.sidebar = Instance.new("Frame")
     self.sidebar.Size = UDim2.new(0, 150, 1, -40)
     self.sidebar.Position = UDim2.new(0, 0, 0, 40)
-    self.sidebar.BackgroundColor3 = NeoUI.Colors.Sidebar
+    self.sidebar.BackgroundColor3 = colors.Sidebar
     self.sidebar.BorderSizePixel = 0
     self.sidebar.Parent = self.mainFrame
 
@@ -89,7 +85,7 @@ function NeoUI.new()
     self.contentFrame = Instance.new("Frame")
     self.contentFrame.Size = UDim2.new(1, -150, 1, -40)
     self.contentFrame.Position = UDim2.new(0, 150, 0, 40)
-    self.contentFrame.BackgroundColor3 = NeoUI.Colors.Content
+    self.contentFrame.BackgroundColor3 = colors.Content
     self.contentFrame.BorderSizePixel = 0
     self.contentFrame.Parent = self.mainFrame
 
@@ -98,25 +94,29 @@ function NeoUI.new()
     return self
 end
 
-function NeoUI:createTabButton(name: string, callback: (button: TextButton)->())
+-- Create Tab Button
+function NeoModUI:createTabButton(name)
     local btn = Instance.new("TextButton")
     btn.Name = name .. "Tab"
     btn.Size = UDim2.new(1, 0, 0, 35)
-    btn.BackgroundColor3 = NeoUI.Colors.ButtonIdle
-    btn.TextColor3 = NeoUI.Colors.ButtonText
+    btn.BackgroundColor3 = colors.ButtonIdle
+    btn.TextColor3 = colors.ButtonText
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 16
     btn.Text = name
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
 
-    btn.Parent = self.sidebar
-    btn.MouseButton1Click:Connect(function() callback(btn) end)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
+    btn.Parent = self.sidebar
     return btn
 end
 
-function NeoUI:createPage(name: string)
+-- Create Page
+function NeoModUI:createPage(name)
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -140,31 +140,152 @@ function NeoUI:createPage(name: string)
     return page
 end
 
-function NeoUI:switchPage(name: string)
-    for _, page in pairs(self.pages) do
-        page.Visible = false
-    end
-    if self.pages[name] then
-        self.pages[name].Visible = true
-    end
+-- Create Label
+function NeoModUI:createLabel(text, parent)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -20, 0, 25)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 18
+    lbl.TextColor3 = colors.SectionHeaderText
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = parent
+    return lbl
 end
 
-function NeoUI:setupKeybindings(toggleKey: Enum.KeyCode, unloadKey: Enum.KeyCode)
-    self.toggleKey = toggleKey or defaultToggleKey
-    self.unloadKey = unloadKey or defaultUnloadKey
+-- Create Button
+function NeoModUI:createButton(text, parent, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 260, 0, 30)
+    btn.BackgroundColor3 = colors.ButtonIdle
+    btn.Text = text
+    btn.TextColor3 = colors.ButtonText
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
 
-    local inputConn
-    inputConn = UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe then return end
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            if input.KeyCode == self.toggleKey then
-                self.mainFrame.Visible = not self.mainFrame.Visible
-            elseif input.KeyCode == self.unloadKey then
-                if inputConn then inputConn:Disconnect() end
-                self.screenGui:Destroy()
-            end
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+
+    btn.Parent = parent
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+-- Create Toggle
+function NeoModUI:createToggle(text, parent, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 265, 0, 30)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -40, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 16
+    lbl.TextColor3 = colors.LabelText
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = frame
+
+    local box = Instance.new("TextButton")
+    box.Size = UDim2.new(0, 30, 0, 30)
+    box.Position = UDim2.new(1, -35, 0, 0)
+    box.BackgroundColor3 = colors.ToggleOff
+    box.Text = ""
+    box.BorderSizePixel = 0
+    box.AutoButtonColor = false
+    box.Parent = frame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = box
+
+    local state = false
+    box.MouseButton1Click:Connect(function()
+        state = not state
+        box.BackgroundColor3 = state and colors.ToggleOn or colors.ToggleOff
+        callback(state)
+    end)
+
+    return frame
+end
+
+-- Create Slider
+function NeoModUI:createSlider(text, min, max, defaultValue, parent, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 260, 0, 40)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, 0, 0, 20)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.TextColor3 = colors.LabelText
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = frame
+
+    local valLbl = Instance.new("TextLabel")
+    valLbl.Size = UDim2.new(0, 50, 0, 20)
+    valLbl.Position = UDim2.new(1, -50, 0, 0)
+    valLbl.BackgroundTransparency = 1
+    valLbl.Text = tostring(defaultValue)
+    valLbl.Font = Enum.Font.Gotham
+    valLbl.TextSize = 14
+    valLbl.TextColor3 = colors.ValueText
+    valLbl.TextXAlignment = Enum.TextXAlignment.Right
+    valLbl.Parent = frame
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(1, 0, 0, 10)
+    bar.Position = UDim2.new(0, 0, 0, 25)
+    bar.BackgroundColor3 = colors.SliderBar
+    bar.BorderSizePixel = 0
+    bar.Parent = frame
+
+    local fill = Instance.new("Frame")
+    local startAlpha = (defaultValue - min) / (max - min)
+    fill.Size = UDim2.new(startAlpha, 0, 1, 0)
+    fill.BackgroundColor3 = colors.SliderFill
+    fill.BorderSizePixel = 0
+    fill.Parent = bar
+
+    local dragging = false
+    local function updateFromMouse(px)
+        local relX = math.clamp((px - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+        fill.Size = UDim2.new(relX, 0, 1, 0)
+        local value = math.floor(min + (max - min) * relX + 0.5)
+        valLbl.Text = tostring(value)
+        callback(value)
+    end
+
+    bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            updateFromMouse(input.Position.X)
         end
     end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updateFromMouse(input.Position.X)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
+            dragging = false
+        end
+    end)
+
+    return frame
 end
 
-return NeoUI
+return NeoModUI
