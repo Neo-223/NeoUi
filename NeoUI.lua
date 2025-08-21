@@ -500,4 +500,124 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
+function Neo:CreateDropdown(text: string, options: {string}, callback: (string)->())
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 260, 0, 30)
+    frame.BackgroundTransparency = 1
+    frame.Parent = self.Page
+
+    -- Main button
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundColor3 = colors.Button
+    btn.Text = text .. ": " .. (options[1] or "")
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Parent = frame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+
+    -- Dropdown container (hidden by default)
+    local dropdown = Instance.new("ScrollingFrame")
+    dropdown.Size = UDim2.new(1, 0, 0, 0) -- start collapsed
+    dropdown.Position = UDim2.new(0, 0, 1, 2)
+    dropdown.BackgroundColor3 = colors.Sidebar
+    dropdown.BorderSizePixel = 0
+    dropdown.ScrollBarThickness = 4
+    dropdown.Visible = false
+    dropdown.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    dropdown.CanvasSize = UDim2.new(0, 0, 0, 0)
+    dropdown.Parent = frame
+
+    local dcorner = Instance.new("UICorner")
+    dcorner.CornerRadius = UDim.new(0, 6)
+    dcorner.Parent = dropdown
+
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = dropdown
+    layout.Padding = UDim.new(0, 2)
+
+    -- Option buttons
+    for i, opt in ipairs(options) do
+        local optBtn = Instance.new("TextButton")
+        optBtn.Size = UDim2.new(1, -4, 0, 28)
+        optBtn.BackgroundColor3 = colors.Button
+        optBtn.Text = opt
+        optBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        optBtn.Font = Enum.Font.Gotham
+        optBtn.TextSize = 14
+        optBtn.BorderSizePixel = 0
+        optBtn.AutoButtonColor = false
+        optBtn.Parent = dropdown
+
+        local ocorner = Instance.new("UICorner")
+        ocorner.CornerRadius = UDim.new(0, 6)
+        ocorner.Parent = optBtn
+
+        optBtn.MouseButton1Click:Connect(function()
+            btn.Text = text .. ": " .. opt
+            dropdown.Visible = false
+            dropdown.Size = UDim2.new(1, 0, 0, 0)
+            if callback then callback(opt) end
+        end)
+    end
+
+    -- Toggle dropdown open/close
+    local isOpen = false
+    btn.MouseButton1Click:Connect(function()
+        isOpen = not isOpen
+        dropdown.Visible = isOpen
+        if isOpen then
+            -- limit height to 4 items max
+            local count = math.min(#options, 4)
+            local targetHeight = (28 + 2) * count + 4
+            dropdown.Size = UDim2.new(1, 0, 0, targetHeight)
+
+            -- 🔹 Check if going out of content view, flip upwards
+            local absPos = frame.AbsolutePosition.Y
+            local absSize = frame.AbsoluteSize.Y
+            local screenSize = self._mainFrame.AbsoluteSize.Y
+            if absPos + absSize + targetHeight > screenSize then
+                dropdown.Position = UDim2.new(0, 0, 0, -targetHeight - 2)
+            else
+                dropdown.Position = UDim2.new(0, 0, 1, 2)
+            end
+        else
+            dropdown.Size = UDim2.new(1, 0, 0, 0)
+        end
+    end)
+
+    -- Close if clicking outside
+    local UIS = game:GetService("UserInputService")
+    table.insert(self._connections, UIS.InputBegan:Connect(function(input, gpe)
+        if gpe or not isOpen then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mousePos = UIS:GetMouseLocation()
+            local guiInset = game:GetService("GuiService"):GetGuiInset()
+            mousePos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
+            if not dropdown.AbsolutePosition or not dropdown.AbsoluteSize then return end
+            local within = (mousePos.X >= dropdown.AbsolutePosition.X
+                and mousePos.X <= dropdown.AbsolutePosition.X + dropdown.AbsoluteSize.X
+                and mousePos.Y >= dropdown.AbsolutePosition.Y
+                and mousePos.Y <= dropdown.AbsolutePosition.Y + dropdown.AbsoluteSize.Y)
+            local withinBtn = (mousePos.X >= btn.AbsolutePosition.X
+                and mousePos.X <= btn.AbsolutePosition.X + btn.AbsoluteSize.X
+                and mousePos.Y >= btn.AbsolutePosition.Y
+                and mousePos.Y <= btn.AbsolutePosition.Y + btn.AbsoluteSize.Y)
+            if not within and not withinBtn then
+                isOpen = false
+                dropdown.Visible = false
+                dropdown.Size = UDim2.new(1, 0, 0, 0)
+            end
+        end
+    end))
+
+    return frame
+end
+
 return Neo
