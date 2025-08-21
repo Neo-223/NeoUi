@@ -500,4 +500,103 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
+function Neo:CreateDropdown(labelText: string, options: {string}, defaultValue: string, callback: (string)->())
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 260, 0, 30)
+    frame.BackgroundTransparency = 1
+    frame.Parent = self.Page
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -30, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = frame
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 30, 0, 30)
+    btn.Position = UDim2.new(1, -30, 0, 0)
+    btn.BackgroundColor3 = colors.Button
+    btn.Text = "▼"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Parent = frame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+
+    local dropdown = Instance.new("Frame")
+    dropdown.Size = UDim2.new(1, 0, 0, 0)
+    dropdown.Position = UDim2.new(0, 0, 1, 2)
+    dropdown.BackgroundColor3 = colors.Content
+    dropdown.BorderSizePixel = 0
+    dropdown.Visible = false
+    dropdown.Parent = frame
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 2)
+    listLayout.FillDirection = Enum.FillDirection.Vertical
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = dropdown
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 5)
+    padding.PaddingLeft = UDim.new(0, 5)
+    padding.PaddingRight = UDim.new(0, 5)
+    padding.Parent = dropdown
+
+    local selectedValue = defaultValue
+    local dropdownOpen = false
+
+    local function toggleDropdown()
+        dropdownOpen = not dropdownOpen
+        dropdown.Visible = dropdownOpen
+
+        -- adjust dropdown height
+        if dropdownOpen then
+            dropdown.Size = UDim2.new(1, 0, 0, #options * 30 + 10)
+        else
+            dropdown.Size = UDim2.new(1, 0, 0, 0)
+        end
+    end
+
+    btn.MouseButton1Click:Connect(toggleDropdown)
+
+    for _, option in ipairs(options) do
+        local optBtn = Instance.new("TextButton")
+        optBtn.Size = UDim2.new(1, 0, 0, 30)
+        optBtn.BackgroundColor3 = colors.Button
+        optBtn.Text = option
+        optBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        optBtn.Font = Enum.Font.Gotham
+        optBtn.TextSize = 14
+        optBtn.BorderSizePixel = 0
+        optBtn.AutoButtonColor = false
+        optBtn.Parent = dropdown
+
+        local optCorner = Instance.new("UICorner")
+        optCorner.CornerRadius = UDim.new(0, 6)
+        optCorner.Parent = optBtn
+
+        optBtn.MouseButton1Click:Connect(function()
+            selectedValue = option
+            lbl.Text = labelText .. ": " .. selectedValue
+            dropdownOpen = false
+            dropdown.Visible = false
+            if callback then callback(selectedValue) end
+        end)
+    end
+
+    lbl.Text = labelText .. ": " .. defaultValue
+    return frame
+end
+
 return Neo
