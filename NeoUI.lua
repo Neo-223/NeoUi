@@ -506,36 +506,38 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
-    -- Label
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -40, 1, 0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = labelText
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 16
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = frame
-
-    -- Dropdown button
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 30, 0, 30)
-    button.Position = UDim2.new(1, -35, 0, 0)
-    button.BackgroundColor3 = colors.Button
-    button.Text = "▾"
-    button.BorderSizePixel = 0
-    button.AutoButtonColor = false
-    button.Parent = frame
+    -- Label / selected value
+    local selectedValue = Instance.new("TextLabel")
+    selectedValue.Size = UDim2.new(1, 0, 1, 0)
+    selectedValue.BackgroundColor3 = colors.Button
+    selectedValue.Text = labelText .. ": Select"
+    selectedValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+    selectedValue.Font = Enum.Font.Gotham
+    selectedValue.TextSize = 14
+    selectedValue.TextXAlignment = Enum.TextXAlignment.Left
+    selectedValue.BorderSizePixel = 0
+    selectedValue.Parent = frame
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = button
+    corner.Parent = selectedValue
+
+    -- Dropdown arrow
+    local arrow = Instance.new("TextLabel")
+    arrow.Size = UDim2.new(0, 20, 1, 0)
+    arrow.Position = UDim2.new(1, -20, 0, 0)
+    arrow.BackgroundTransparency = 1
+    arrow.Text = "▾"
+    arrow.TextColor3 = Color3.fromRGB(255, 255, 255)
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 14
+    arrow.Parent = frame
 
     -- Dropdown list
     local dropdown = Instance.new("Frame")
     dropdown.Size = UDim2.new(0, 260, 0, 0)
     dropdown.Position = UDim2.new(0, 0, 1, 2)
-    dropdown.BackgroundColor3 = colors.Content
+    dropdown.BackgroundColor3 = colors.Button
     dropdown.BorderSizePixel = 0
     dropdown.Visible = false
     dropdown.Parent = frame
@@ -544,30 +546,31 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     dropdownCorner.CornerRadius = UDim.new(0, 6)
     dropdownCorner.Parent = dropdown
 
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 2)
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Parent = dropdown
+    local layout = Instance.new("UIListLayout")
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 2)
+    layout.Parent = dropdown
 
-    -- Function to toggle dropdown
+    -- Track open state
     local isOpen = false
     local function toggleDropdown()
         isOpen = not isOpen
         dropdown.Visible = isOpen
     end
 
-    button.MouseButton1Click:Connect(toggleDropdown)
+    selectedValue.MouseButton1Click:Connect(toggleDropdown)
+    arrow.MouseButton1Click:Connect(toggleDropdown)
 
-    -- Close dropdown when clicking outside
+    -- Close when clicking outside
     local closeConnection
     closeConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if not isOpen then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             local mousePos = UserInputService:GetMouseLocation()
-            local absPos = dropdown.AbsolutePosition
-            local absSize = dropdown.AbsoluteSize
-            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X 
-                and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
+            local absPos = frame.AbsolutePosition
+            local absSize = frame.AbsoluteSize
+            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
+                    mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y + dropdown.AbsoluteSize.Y) then
                 isOpen = false
                 dropdown.Visible = false
             end
@@ -576,41 +579,49 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     table.insert(self._connections, closeConnection)
 
     -- Populate options
-    for _, optionText in ipairs(options) do
+    for _, option in ipairs(options) do
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, 0, 0, 30)
         optBtn.BackgroundColor3 = colors.Button
-        optBtn.Text = optionText
+        optBtn.Text = option
         optBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         optBtn.Font = Enum.Font.Gotham
         optBtn.TextSize = 14
         optBtn.BorderSizePixel = 0
-        optBtn.AutoButtonColor = false
+        optBtn.AutoButtonColor = true
         optBtn.Parent = dropdown
 
         local optCorner = Instance.new("UICorner")
         optCorner.CornerRadius = UDim.new(0, 6)
         optCorner.Parent = optBtn
 
+        -- Highlight on hover
+        optBtn.MouseEnter:Connect(function()
+            optBtn.BackgroundColor3 = colors.Accent
+        end)
+        optBtn.MouseLeave:Connect(function()
+            optBtn.BackgroundColor3 = colors.Button
+        end)
+
         optBtn.MouseButton1Click:Connect(function()
-            lbl.Text = labelText .. ": " .. optionText
+            selectedValue.Text = labelText .. ": " .. option
             dropdown.Visible = false
             isOpen = false
-            if callback then callback(optionText) end
+            if callback then callback(option) end
         end)
     end
 
-    -- Adjust dropdown size automatically
-    local function updateDropdownSize()
+    -- Auto adjust dropdown height
+    local function updateHeight()
         local totalHeight = 0
         for _, child in ipairs(dropdown:GetChildren()) do
             if child:IsA("TextButton") then
-                totalHeight += child.Size.Y.Offset
+                totalHeight += child.Size.Y.Offset + layout.Padding.Offset
             end
         end
         dropdown.Size = UDim2.new(0, 260, 0, totalHeight)
     end
-    updateDropdownSize()
+    updateHeight()
 
     return frame
 end
