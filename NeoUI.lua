@@ -178,11 +178,12 @@ function Neo:CreateWindow(title: string)
     contentHolder.Parent = mainFrame
     window.Content = contentHolder
 
-    local chPadding = Instance.new("UIPadding")
-    chPadding.PaddingTop = UDim.new(0, 0)      
-    chPadding.PaddingLeft = UDim.new(0, 0)     
-    chPadding.PaddingBottom = UDim.new(0, 4)   
-    chPadding.Parent = contentHolder
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 0)   -- no top padding here anymore
+    padding.PaddingLeft = UDim.new(0, 15)
+    padding.PaddingBottom = UDim.new(0, 10)
+    padding.Parent = page
+
 
    
     window.Pages = {}
