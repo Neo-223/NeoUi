@@ -528,14 +528,17 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     dropBtn.AutoButtonColor = false
     dropBtn.Parent = frame
 
-    -- Only the main button is rounded
+    -- Rounded only for main button
     local dropCorner = Instance.new("UICorner")
     dropCorner.CornerRadius = UDim.new(0, 6)
     dropCorner.Parent = dropBtn
 
+    -- Ensure _connections table exists
+    self._connections = self._connections or {}
+
     local listFrame = Instance.new("Frame")
     listFrame.Size = UDim2.new(1, 0, 0, 0)
-    listFrame.Position = UDim2.new(0, 0, 0, 47)
+    listFrame.Position = UDim2.new(0, 0, 0, dropBtn.Position.Y.Offset + dropBtn.Size.Y.Offset) -- flush with button
     listFrame.BackgroundColor3 = colors.Content
     listFrame.BorderSizePixel = 0
     listFrame.Visible = false
@@ -565,7 +568,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         optBtn.AutoButtonColor = false
         optBtn.Parent = listFrame
 
-        -- Round only the last option
+        -- Only round last option
         if i == #options then
             local lastCorner = Instance.new("UICorner")
             lastCorner.CornerRadius = UDim.new(0, 6)
@@ -595,18 +598,17 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         end
     end)
 
+    -- Close dropdown when clicking outside
     local UIS = game:GetService("UserInputService")
     table.insert(self._connections, UIS.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if listFrame.Visible and input.UserInputType == Enum.UserInputType.MouseButton1 then
             local mousePos = UIS:GetMouseLocation()
-
             local function inside(gui)
                 local absPos, absSize = gui.AbsolutePosition, gui.AbsoluteSize
                 return mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X
                     and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y
             end
-
             if not inside(dropBtn) and not inside(listFrame) then
                 closeDropdown()
             end
