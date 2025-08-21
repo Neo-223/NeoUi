@@ -225,7 +225,7 @@ function Neo:CreateTab(name: string, isSettings: boolean?)
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
-    -- Page (scrollable)
+    -- Page (scrollable, scrollbar hidden)
     local page = Instance.new("ScrollingFrame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -233,8 +233,8 @@ function Neo:CreateTab(name: string, isSettings: boolean?)
     page.Visible = false
     page.BorderSizePixel = 0
     page.CanvasSize = UDim2.new(0, 0, 0, 0)
-    page.ScrollBarThickness = 0 -- hidden scrollbar
     page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    page.ScrollBarThickness = 0  -- ✅ hides scrollbar
     page.Parent = self.Content
 
     local layout = Instance.new("UIListLayout")
