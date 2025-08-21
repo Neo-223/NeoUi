@@ -544,6 +544,8 @@ function Neo:CreateDropdown(text: string, options: {string}, callback: (string) 
     uiPadding.PaddingBottom = UDim.new(0, 2)
     uiPadding.Parent = listFrame
 
+    local isOpen = false
+
     -- Create options
     for _, option in ipairs(options) do
         local opt = Instance.new("TextButton")
@@ -569,19 +571,21 @@ function Neo:CreateDropdown(text: string, options: {string}, callback: (string) 
         end)
     end
 
-    -- Expand height if more than 3 options
-    uiList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    -- Force height update immediately
+    local function updateHeight()
         local contentHeight = uiList.AbsoluteContentSize.Y + uiPadding.PaddingTop.Offset + uiPadding.PaddingBottom.Offset
-        listFrame.Size = UDim2.new(1, 0, 0, math.min(contentHeight, 100)) -- scroll if > ~3 items
-    end)
+        listFrame.Size = UDim2.new(1, 0, 0, math.min(contentHeight, 100)) -- ~3–4 items
+    end
+    updateHeight()
+    uiList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateHeight)
 
-    local isOpen = false
+    -- Toggle open/close
     button.MouseButton1Click:Connect(function()
         isOpen = not isOpen
         listFrame.Visible = isOpen
     end)
 
-    -- Collapse when clicking outside
+    -- Close when clicking outside
     UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if isOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
