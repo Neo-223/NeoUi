@@ -1,279 +1,231 @@
--- Neo UI Library with forced Settings tab and fixed slider/toggle
--- Default keys: Insert (show/hide), Delete (unload)
+-- Neo GUI Library (with Settings tab + default keybinds)
+-- Load with: local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/you/repo/main/NeoLib.lua"))()
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local Neo = {}
 Neo.__index = Neo
 
--- Services
-local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local colors = {
+    Background = Color3.fromRGB(18, 18, 22),
+    Sidebar    = Color3.fromRGB(28, 28, 34),
+    Content    = Color3.fromRGB(24, 24, 30),
+    Button     = Color3.fromRGB(45, 45, 55),
+    Topbar     = Color3.fromRGB(30, 30, 38),
+    Accent     = Color3.fromRGB(0, 170, 255),
+    Success    = Color3.fromRGB(0, 200, 120),
+}
 
--- Library constructor
-function Neo:CreateWindow(title)
-    local window = setmetatable({}, Neo)
+local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
+    for _, child in ipairs(sidebar:GetChildren()) do
+        if child:IsA("TextButton") then
+            child.BackgroundColor3 = colors.Button
+        end
+    end
+    selectedBtn.BackgroundColor3 = colors.Accent
+end
 
-    -- ScreenGui
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "NeoUI"
-    gui.ResetOnSpawn = false
-    gui.IgnoreGuiInset = true
-    gui.Parent = game:GetService("CoreGui")
-    window.Gui = gui
+----------------------------------------------------------------------
 
-    -- Main Frame
-    local main = Instance.new("Frame")
-    main.Size = UDim2.new(0, 600, 0, 400)
-    main.Position = UDim2.new(0.5, -300, 0.5, -200)
-    main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    main.BorderSizePixel = 0
-    main.Active = true
-    main.Draggable = true
-    main.Parent = gui
-    window.Main = main
+function Neo:CreateWindow(title: string)
+    local window = {}
+    setmetatable(window, Neo)
 
-    -- Sidebar
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "NeoModMenu"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = PlayerGui
+    window.Gui = screenGui
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 440, 0, 400)
+    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+    mainFrame.BackgroundColor3 = colors.Background
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    mainFrame.Visible = true
+    mainFrame.Parent = screenGui
+    window.MainFrame = mainFrame
+
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 10)
+    mainCorner.Parent = mainFrame
+
+    local topBar = Instance.new("Frame")
+    topBar.Size = UDim2.new(1, 0, 0, 40)
+    topBar.BackgroundColor3 = colors.Topbar
+    topBar.BorderSizePixel = 0
+    topBar.Parent = mainFrame
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -10, 1, 0)
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 20
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = topBar
+
     local sidebar = Instance.new("Frame")
-    sidebar.Size = UDim2.new(0, 150, 1, 0)
-    sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    sidebar.Size = UDim2.new(0, 150, 1, -40)
+    sidebar.Position = UDim2.new(0, 0, 0, 40)
+    sidebar.BackgroundColor3 = colors.Sidebar
     sidebar.BorderSizePixel = 0
-    sidebar.Parent = main
+    sidebar.Parent = mainFrame
     window.Sidebar = sidebar
 
-    local listLayout = Instance.new("UIListLayout", sidebar)
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    local sidebarPadding = Instance.new("UIPadding")
+    sidebarPadding.PaddingTop = UDim.new(0, 8)
+    sidebarPadding.PaddingLeft = UDim.new(0, 10)
+    sidebarPadding.PaddingRight = UDim.new(0, 10)
+    sidebarPadding.Parent = sidebar
 
-    -- TopBar (title)
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 40)
-    titleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    titleLabel.Text = title or "Neo"
-    titleLabel.TextColor3 = Color3.new(1,1,1)
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 18
-    titleLabel.Parent = main
+    local sidebarLayout = Instance.new("UIListLayout")
+    sidebarLayout.FillDirection = Enum.FillDirection.Vertical
+    sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sidebarLayout.Padding = UDim.new(0, 6)
+    sidebarLayout.Parent = sidebar
 
-    -- Content container
-    local content = Instance.new("Frame")
-    content.Size = UDim2.new(1, -150, 1, -40)
-    content.Position = UDim2.new(0, 150, 0, 40)
-    content.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    content.BorderSizePixel = 0
-    content.Parent = main
-    window.Content = content
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Size = UDim2.new(1, -150, 1, -40)
+    contentFrame.Position = UDim2.new(0, 150, 0, 40)
+    contentFrame.BackgroundColor3 = colors.Content
+    contentFrame.BorderSizePixel = 0
+    contentFrame.Parent = mainFrame
+    window.Content = contentFrame
 
-    -- Tabs
-    window.Tabs = {}
-
-    function window:CreateTab(name)
-        local tabBtn = Instance.new("TextButton")
-        tabBtn.Size = UDim2.new(1, 0, 0, 40)
-        tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        tabBtn.Text = name
-        tabBtn.TextColor3 = Color3.new(1,1,1)
-        tabBtn.Font = Enum.Font.Gotham
-        tabBtn.TextSize = 16
-        tabBtn.Parent = sidebar
-
-        local page = Instance.new("ScrollingFrame")
-        page.Size = UDim2.new(1, 0, 1, 0)
-        page.CanvasSize = UDim2.new(0, 0, 0, 0)
-        page.BackgroundTransparency = 1
-        page.Visible = false
-        page.ScrollBarThickness = 4
-        page.Parent = content
-
-        local layout = Instance.new("UIListLayout", page)
-        layout.Padding = UDim.new(0, 6)
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-
-        local tab = {
-            Button = tabBtn,
-            Page = page
-        }
-        self.Tabs[name] = tab
-
-        tabBtn.MouseButton1Click:Connect(function()
-            for _, t in pairs(self.Tabs) do
-                t.Page.Visible = false
-                t.Button.BackgroundColor3 = Color3.fromRGB(40,40,40)
-            end
-            page.Visible = true
-            tabBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-        end)
-
-        if not self.CurrentTab then
-            tabBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
-            page.Visible = true
-            self.CurrentTab = tab
-        end
-
-        -- Tab component creators
-        function tab:CreateLabel(text)
-            local lbl = Instance.new("TextLabel")
-            lbl.Size = UDim2.new(1, -10, 0, 30)
-            lbl.BackgroundTransparency = 1
-            lbl.Text = text
-            lbl.TextColor3 = Color3.new(1,1,1)
-            lbl.Font = Enum.Font.Gotham
-            lbl.TextSize = 16
-            lbl.TextXAlignment = Enum.TextXAlignment.Left
-            lbl.Parent = page
-            return lbl
-        end
-
-        function tab:CreateButton(text, callback)
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, -10, 0, 35)
-            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            btn.Text = text
-            btn.TextColor3 = Color3.new(1,1,1)
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 16
-            btn.Parent = page
-            btn.MouseButton1Click:Connect(function()
-                if callback then callback() end
-            end)
-            return btn
-        end
-
-        function tab:CreateToggle(text, default, callback)
-            local holder = Instance.new("Frame")
-            holder.Size = UDim2.new(1, -10, 0, 35)
-            holder.BackgroundTransparency = 1
-            holder.Parent = page
-
-            local lbl = Instance.new("TextLabel")
-            lbl.Size = UDim2.new(0.7, 0, 1, 0)
-            lbl.BackgroundTransparency = 1
-            lbl.Text = text
-            lbl.TextColor3 = Color3.new(1,1,1)
-            lbl.Font = Enum.Font.Gotham
-            lbl.TextSize = 16
-            lbl.TextXAlignment = Enum.TextXAlignment.Left
-            lbl.Parent = holder
-
-            local box = Instance.new("TextButton")
-            box.Size = UDim2.new(0, 30, 0, 30)
-            box.Position = UDim2.new(1, -35, 0.5, -15)
-            box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            box.Text = ""
-            box.Parent = holder
-
-            local enabled = default or false
-            local function update()
-                box.BackgroundColor3 = enabled and Color3.fromRGB(0,170,255) or Color3.fromRGB(50,50,50)
-            end
-            update()
-
-            box.MouseButton1Click:Connect(function()
-                enabled = not enabled
-                update()
-                if callback then callback(enabled) end
-            end)
-
-            return box
-        end
-
-        function tab:CreateSlider(text, min, max, default, callback)
-            local holder = Instance.new("Frame")
-            holder.Size = UDim2.new(1, -10, 0, 50)
-            holder.BackgroundTransparency = 1
-            holder.Parent = page
-
-            local lbl = Instance.new("TextLabel")
-            lbl.Size = UDim2.new(1, 0, 0, 20)
-            lbl.BackgroundTransparency = 1
-            lbl.Text = text .. ": " .. tostring(default)
-            lbl.TextColor3 = Color3.new(1,1,1)
-            lbl.Font = Enum.Font.Gotham
-            lbl.TextSize = 16
-            lbl.TextXAlignment = Enum.TextXAlignment.Left
-            lbl.Parent = holder
-
-            local bar = Instance.new("Frame")
-            bar.Size = UDim2.new(1, 0, 0, 8)
-            bar.Position = UDim2.new(0, 0, 0, 30)
-            bar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            bar.BorderSizePixel = 0
-            bar.Parent = holder
-
-            local fill = Instance.new("Frame")
-            fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
-            fill.BackgroundColor3 = Color3.fromRGB(0,170,255)
-            fill.BorderSizePixel = 0
-            fill.Parent = bar
-
-            local dragging = false
-            bar.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = true
-                end
-            end)
-            bar.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = false
-                end
-            end)
-            UIS.InputChanged:Connect(function(input)
-                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    local rel = math.clamp((input.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X, 0, 1)
-                    local val = math.floor(min + (max-min)*rel)
-                    fill.Size = UDim2.new(rel, 0, 1, 0)
-                    lbl.Text = text .. ": " .. tostring(val)
-                    if callback then callback(val) end
-                end
-            end)
-
-            return holder
-        end
-
-        return tab
-    end
+    window.Pages = {}
+    window._hasDefaultTab = false
 
     function window:Toggle()
-        self.Main.Visible = not self.Main.Visible
+        self.MainFrame.Visible = not self.MainFrame.Visible
     end
-
     function window:Destroy()
-        self.Gui:Destroy()
+        if self.Gui then self.Gui:Destroy() end
     end
 
-    -- Settings tab (always last)
-    local function createSettings()
-        local settingsTab = window:CreateTab("Settings")
-        settingsTab.Button.LayoutOrder = 999
+    -- === Inject permanent Settings tab ===
+    local function addSettingsTab()
+        local tab = {}
+        setmetatable(tab, Neo)
 
-        local hideKey = Enum.KeyCode.Insert
-        local listening = false
+        local btn = Instance.new("TextButton")
+        btn.Name = "SettingsTab"
+        btn.Size = UDim2.new(1, 0, 0, 35)
+        btn.BackgroundColor3 = colors.Button
+        btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 16
+        btn.Text = "Settings"
+        btn.BorderSizePixel = 0
+        btn.AutoButtonColor = false
+        btn.LayoutOrder = 9999 -- always bottom
+        btn.Parent = self.Sidebar
 
-        settingsTab:CreateLabel("Menu Settings")
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = btn
 
-        local rebindBtn
-        rebindBtn = settingsTab:CreateButton("Rebind Hide/Show (Current: " .. hideKey.Name .. ")", function()
-            rebindBtn.Text = "Press any key..."
-            listening = true
+        local page = Instance.new("Frame")
+        page.Name = "SettingsPage"
+        page.Size = UDim2.new(1, 0, 1, 0)
+        page.BackgroundTransparency = 1
+        page.Visible = false
+        page.Parent = self.Content
+
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0, 10)
+        layout.FillDirection = Enum.FillDirection.Vertical
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Parent = page
+
+        local padding = Instance.new("UIPadding")
+        padding.PaddingTop = UDim.new(0, 15)
+        padding.PaddingLeft = UDim.new(0, 15)
+        padding.Parent = page
+
+        self.Pages["Settings"] = page
+
+        local function selectThis()
+            for _, p in pairs(self.Pages) do p.Visible = false end
+            page.Visible = true
+            highlightTab(self.Sidebar, btn)
+        end
+        btn.MouseButton1Click:Connect(selectThis)
+
+        -- Default contents:
+        -- Rebindable Hide/Show
+        local hideBind = Enum.KeyCode.Insert
+        local unloadBind = Enum.KeyCode.Delete
+
+        local hideBtn = Instance.new("TextButton")
+        hideBtn.Size = UDim2.new(0, 260, 0, 30)
+        hideBtn.BackgroundColor3 = colors.Button
+        hideBtn.Text = "Rebind Hide/Show (Insert)"
+        hideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        hideBtn.Font = Enum.Font.Gotham
+        hideBtn.TextSize = 14
+        hideBtn.Parent = page
+        Instance.new("UICorner", hideBtn)
+
+        hideBtn.MouseButton1Click:Connect(function()
+            hideBtn.Text = "Press a key..."
+            local conn; conn = UserInputService.InputBegan:Connect(function(input, gpe)
+                if not gpe and input.UserInputType == Enum.UserInputType.Keyboard then
+                    hideBind = input.KeyCode
+                    hideBtn.Text = "Rebind Hide/Show ("..hideBind.Name..")"
+                    conn:Disconnect()
+                end
+            end)
         end)
 
-        UIS.InputBegan:Connect(function(input, gpe)
-            if listening and input.UserInputType == Enum.UserInputType.Keyboard then
-                hideKey = input.KeyCode
-                rebindBtn.Text = "Rebind Hide/Show (Current: " .. hideKey.Name .. ")"
-                listening = false
-            elseif not gpe and input.KeyCode == hideKey then
-                window:Toggle()
-            elseif not gpe and input.KeyCode == Enum.KeyCode.Delete then
-                window:Destroy()
+        local unloadBtn = Instance.new("TextButton")
+        unloadBtn.Size = UDim2.new(0, 260, 0, 30)
+        unloadBtn.BackgroundColor3 = colors.Button
+        unloadBtn.Text = "Rebind Unload (Delete)"
+        unloadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        unloadBtn.Font = Enum.Font.Gotham
+        unloadBtn.TextSize = 14
+        unloadBtn.Parent = page
+        Instance.new("UICorner", unloadBtn)
+
+        unloadBtn.MouseButton1Click:Connect(function()
+            unloadBtn.Text = "Press a key..."
+            local conn; conn = UserInputService.InputBegan:Connect(function(input, gpe)
+                if not gpe and input.UserInputType == Enum.UserInputType.Keyboard then
+                    unloadBind = input.KeyCode
+                    unloadBtn.Text = "Rebind Unload ("..unloadBind.Name..")"
+                    conn:Disconnect()
+                end
+            end)
+        end)
+
+        -- Bind handling
+        UserInputService.InputBegan:Connect(function(input, gpe)
+            if gpe then return end
+            if input.KeyCode == hideBind then
+                self:Toggle()
+            elseif input.KeyCode == unloadBind then
+                self:Destroy()
             end
         end)
-
-        settingsTab:CreateButton("Unload Menu (Delete)", function()
-            window:Destroy()
-        end)
     end
 
-    createSettings()
+    addSettingsTab()
 
     return window
 end
+
+----------------------------------------------------------------------
+
+-- Tab, Button, Toggle, Slider functions remain the same as your code...
+-- (keep your existing CreateTab, CreateButton, CreateToggle, CreateSlider etc.)
 
 return Neo
