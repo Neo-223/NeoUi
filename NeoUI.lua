@@ -506,23 +506,21 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -10, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = labelText
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 16
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
+    -- Main button
+    local mainBtn = Instance.new("TextButton")
+    mainBtn.Size = UDim2.new(1, 0, 1, 0)
+    mainBtn.BackgroundColor3 = colors.Button
+    mainBtn.BorderSizePixel = 0
+    mainBtn.Text = labelText
+    mainBtn.Font = Enum.Font.Gotham
+    mainBtn.TextSize = 14
+    mainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    mainBtn.AutoButtonColor = false
+    mainBtn.Parent = frame
 
-    local dropdownBtn = Instance.new("TextButton")
-    dropdownBtn.Size = UDim2.new(1, 0, 1, 0)
-    dropdownBtn.BackgroundColor3 = colors.Button
-    dropdownBtn.BorderSizePixel = 0
-    dropdownBtn.Text = ""
-    dropdownBtn.AutoButtonColor = false
-    dropdownBtn.Parent = frame
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 6)
+    mainCorner.Parent = mainBtn
 
     local arrow = Instance.new("TextLabel")
     arrow.Size = UDim2.new(0, 20, 0, 20)
@@ -532,24 +530,24 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     arrow.Font = Enum.Font.Gotham
     arrow.TextSize = 14
     arrow.TextColor3 = Color3.fromRGB(255, 255, 255)
-    arrow.Parent = dropdownBtn
+    arrow.Parent = mainBtn
 
     local selectedText = Instance.new("TextLabel")
     selectedText.Size = UDim2.new(1, -30, 1, 0)
     selectedText.Position = UDim2.new(0, 5, 0, 0)
     selectedText.BackgroundTransparency = 1
-    selectedText.Text = "Select..."
+    selectedText.Text = labelText
     selectedText.Font = Enum.Font.Gotham
     selectedText.TextSize = 14
-    selectedText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    selectedText.TextColor3 = Color3.fromRGB(255, 255, 255)
     selectedText.TextXAlignment = Enum.TextXAlignment.Left
-    selectedText.Parent = dropdownBtn
+    selectedText.Parent = mainBtn
 
+    -- Dropdown list
     local listFrame = Instance.new("Frame")
     listFrame.Size = UDim2.new(1, 0, 0, 0)
     listFrame.Position = UDim2.new(0, 0, 1, 5)
-    listFrame.BackgroundColor3 = colors.Content
-    listFrame.BorderSizePixel = 0
+    listFrame.BackgroundTransparency = 1
     listFrame.ClipsDescendants = true
     listFrame.Visible = false
     listFrame.Parent = frame
@@ -558,13 +556,6 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Padding = UDim.new(0, 2)
     layout.Parent = listFrame
-
-    local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 2)
-    padding.PaddingBottom = UDim.new(0, 2)
-    padding.PaddingLeft = UDim.new(0, 4)
-    padding.PaddingRight = UDim.new(0, 4)
-    padding.Parent = listFrame
 
     local dropdownOpen = false
     local function toggleDropdown()
@@ -585,23 +576,32 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
         end
     end
 
-    dropdownBtn.MouseButton1Click:Connect(toggleDropdown)
+    mainBtn.MouseButton1Click:Connect(toggleDropdown)
 
+    -- Create dropdown options
     for i, option in ipairs(options) do
         local optionBtn = Instance.new("TextButton")
-        optionBtn.Size = UDim2.new(1, 0, 0, 25)
-        optionBtn.BackgroundColor3 = colors.Sidebar
+        optionBtn.Size = UDim2.new(1, 0, 0, 30)
+        optionBtn.BackgroundColor3 = colors.Button
         optionBtn.Text = option
-        optionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        optionBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
         optionBtn.Font = Enum.Font.Gotham
         optionBtn.TextSize = 14
         optionBtn.BorderSizePixel = 0
         optionBtn.AutoButtonColor = false
         optionBtn.Parent = listFrame
 
-        local optionCorner = Instance.new("UICorner")
-        optionCorner.CornerRadius = UDim.new(0, 6)
-        optionCorner.Parent = optionBtn
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = optionBtn
+
+        -- Highlight effect (like sidebar)
+        optionBtn.MouseEnter:Connect(function()
+            optionBtn.BackgroundColor3 = colors.Accent
+        end)
+        optionBtn.MouseLeave:Connect(function()
+            optionBtn.BackgroundColor3 = colors.Button
+        end)
 
         optionBtn.MouseButton1Click:Connect(function()
             selectedText.Text = option
@@ -612,6 +612,5 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
 
     return frame
 end
-
 
 return Neo
