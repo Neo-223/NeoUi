@@ -506,6 +506,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
+    -- Label
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, 0, 0, 20)
     lbl.BackgroundTransparency = 1
@@ -516,6 +517,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = frame
 
+    -- Main dropdown button (always rounded)
     local dropBtn = Instance.new("TextButton")
     dropBtn.Size = UDim2.new(1, 0, 0, 25)
     dropBtn.Position = UDim2.new(0, 0, 0, 22)
@@ -528,13 +530,11 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     dropBtn.AutoButtonColor = false
     dropBtn.Parent = frame
 
-    -- Rounded top corners for main button
     local dropCorner = Instance.new("UICorner")
-    dropCorner.CornerRadius = UDim.new(0, 6)
+    dropCorner.CornerRadius = UDim.new(0, 12)
     dropCorner.Parent = dropBtn
 
-    self._connections = self._connections or {}
-
+    -- Large dropdown background
     local listFrame = Instance.new("Frame")
     listFrame.Size = UDim2.new(1, 0, 0, 0)
     listFrame.Position = UDim2.new(0, 0, 0, dropBtn.Position.Y.Offset + dropBtn.Size.Y.Offset)
@@ -544,22 +544,21 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     listFrame.ClipsDescendants = true
     listFrame.Parent = frame
 
+    local listCorner = Instance.new("UICorner")
+    listCorner.CornerRadius = UDim.new(0, 12)
+    listCorner.Parent = listFrame
+
+    -- Options container
     local listLayout = Instance.new("UIListLayout")
     listLayout.FillDirection = Enum.FillDirection.Vertical
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Padding = UDim.new(0, 0)
     listLayout.Parent = listFrame
 
-    local function closeDropdown()
-        listFrame.Visible = false
-        listFrame.Size = UDim2.new(1, 0, 0, 0)
-        dropCorner.CornerRadius = UDim.new(0, 6) -- restore full rounding
-    end
-
     for i, opt in ipairs(options) do
         local optBtn = Instance.new("TextButton")
-        optBtn.Size = UDim2.new(1, 0, 0, 25)
-        optBtn.BackgroundColor3 = colors.Button
+        optBtn.Size = UDim2.new(1, 0, 0, 30)
+        optBtn.BackgroundTransparency = 1
         optBtn.Text = opt
         optBtn.Font = Enum.Font.Gotham
         optBtn.TextSize = 14
@@ -568,43 +567,34 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         optBtn.AutoButtonColor = false
         optBtn.Parent = listFrame
 
-        -- Outer edges rounded for first and last option
-        if i == 1 then
-            local topCorner = Instance.new("UICorner")
-            topCorner.CornerRadius = UDim.new(0, 6)
-            topCorner.Parent = optBtn
-        elseif i == #options then
-            local bottomCorner = Instance.new("UICorner")
-            bottomCorner.CornerRadius = UDim.new(0, 6)
-            bottomCorner.Parent = optBtn
-        end
-
         optBtn.MouseButton1Click:Connect(function()
             dropBtn.Text = opt
-            closeDropdown()
+            listFrame.Visible = false
+            listFrame.Size = UDim2.new(1, 0, 0, 0)
             if callback then callback(opt) end
         end)
 
         optBtn.MouseEnter:Connect(function()
-            optBtn.BackgroundColor3 = colors.Accent
+            optBtn.TextColor3 = colors.Accent
         end)
         optBtn.MouseLeave:Connect(function()
-            optBtn.BackgroundColor3 = colors.Button
+            optBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
         end)
     end
 
+    -- Toggle dropdown
     dropBtn.MouseButton1Click:Connect(function()
         listFrame.Visible = not listFrame.Visible
         if listFrame.Visible then
-            listFrame.Size = UDim2.new(1, 0, 0, #options * 25)
-            dropCorner.CornerRadius = UDim.new(0, 6) -- keep top rounded for seamless look
+            listFrame.Size = UDim2.new(1, 0, 0, #options * 30)
         else
-            closeDropdown()
+            listFrame.Size = UDim2.new(1, 0, 0, 0)
         end
     end)
 
-    -- Outside click closes dropdown
+    -- Close dropdown when clicking outside
     local UIS = game:GetService("UserInputService")
+    self._connections = self._connections or {}
     table.insert(self._connections, UIS.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if listFrame.Visible and input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -612,10 +602,11 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
             local function inside(gui)
                 local absPos, absSize = gui.AbsolutePosition, gui.AbsoluteSize
                 return mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X
-                    and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y
+                   and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y
             end
             if not inside(dropBtn) and not inside(listFrame) then
-                closeDropdown()
+                listFrame.Visible = false
+                listFrame.Size = UDim2.new(1, 0, 0, 0)
             end
         end
     end))
