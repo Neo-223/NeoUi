@@ -1,4 +1,4 @@
--- Neo GUI Library (finalized with fixes + scrolling + settings)
+-- Neo UI Library (Final with fixes)
 -- Load with: local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/Neo-223/NeoUi/refs/heads/main/NeoUI.lua"))()
 
 local Players = game:GetService("Players")
@@ -19,7 +19,7 @@ local colors = {
     Success    = Color3.fromRGB(0, 200, 120),
 }
 
--- Utilities
+-- Highlight selected sidebar tab
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
@@ -29,9 +29,9 @@ local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     selectedBtn.BackgroundColor3 = colors.Accent
 end
 
-----------------------------------------------------------------------
+----------------------------------------------------------------------  
 -- Window
-----------------------------------------------------------------------
+----------------------------------------------------------------------  
 function Neo:CreateWindow(title: string)
     local window = {}
     setmetatable(window, Neo)
@@ -99,40 +99,19 @@ function Neo:CreateWindow(title: string)
     sidebarLayout.Padding = UDim.new(0, 6)
     sidebarLayout.Parent = sidebar
 
-    -- Content
+    -- Content holder
     local contentFrame = Instance.new("Frame")
     contentFrame.Size = UDim2.new(1, -150, 1, -40)
     contentFrame.Position = UDim2.new(0, 150, 0, 40)
     contentFrame.BackgroundColor3 = colors.Content
     contentFrame.BorderSizePixel = 0
     contentFrame.Parent = mainFrame
-
-    -- Scrollable content
-    local pageContainer = Instance.new("ScrollingFrame")
-    pageContainer.Size = UDim2.new(1, 0, 1, 0)
-    pageContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    pageContainer.ScrollBarThickness = 0 -- hidden
-    pageContainer.BackgroundTransparency = 1
-    pageContainer.Parent = contentFrame
-    window.Content = pageContainer
-
-    local layout = Instance.new("UIListLayout")
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 10)
-    layout.Parent = pageContainer
-
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        pageContainer.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 4)
-    end)
+    window.Content = contentFrame
 
     window.Pages = {}
     window._hasDefaultTab = false
 
-    -- Default keybinds
-    window.ToggleKey = Enum.KeyCode.Insert
-    window.UnloadKey = Enum.KeyCode.Delete
-
+    -- Toggle & Destroy
     function window:Toggle()
         self.MainFrame.Visible = not self.MainFrame.Visible
     end
@@ -140,40 +119,40 @@ function Neo:CreateWindow(title: string)
         if self.Gui then self.Gui:Destroy() end
     end
 
-    -- Global input for toggle/unload
+    -- Insert & Delete keybinds
+    local toggleKey = Enum.KeyCode.Insert
+    local unloadKey = Enum.KeyCode.Delete
+
     UserInputService.InputBegan:Connect(function(input, gp)
         if gp then return end
-        if input.KeyCode == window.ToggleKey then
+        if input.KeyCode == toggleKey then
             window:Toggle()
-        elseif input.KeyCode == window.UnloadKey then
+        elseif input.KeyCode == unloadKey then
             window:Destroy()
         end
     end)
 
-    -- Inject Settings tab at the bottom
+    -- Settings tab (always last)
     task.defer(function()
-        if window.Sidebar then
-            local settingsTab = Neo.CreateTab(window, "Settings")
+        local settingsTab = window:CreateTab("Settings")
 
-            -- Rebinds
-            settingsTab:CreateLabel("Keybinds")
+        settingsTab:CreateLabel("Keybinds")
 
-            settingsTab:CreateRebind("Toggle Menu", window.ToggleKey, function(newKey)
-                window.ToggleKey = newKey
-            end)
+        settingsTab:CreateRebind("Toggle Menu", toggleKey, function(newKey)
+            toggleKey = newKey
+        end)
 
-            settingsTab:CreateRebind("Unload Menu", window.UnloadKey, function(newKey)
-                window.UnloadKey = newKey
-            end)
-        end
+        settingsTab:CreateRebind("Unload Menu", unloadKey, function(newKey)
+            unloadKey = newKey
+        end)
     end)
 
     return window
 end
 
-----------------------------------------------------------------------
+----------------------------------------------------------------------  
 -- Tabs
-----------------------------------------------------------------------
+----------------------------------------------------------------------  
 function Neo:CreateTab(name: string)
     local tab = {}
     setmetatable(tab, Neo)
@@ -195,14 +174,16 @@ function Neo:CreateTab(name: string)
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
-    -- Page
-    local page = Instance.new("Frame")
+    -- Scrollable Page
+    local page = Instance.new("ScrollingFrame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, 0)
     page.BackgroundTransparency = 1
+    page.ScrollBarThickness = 0
     page.Visible = false
     page.Parent = self.Content
-    self.Pages[name] = page
+    page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    page.CanvasSize = UDim2.new(0, 0, 0, 0)
 
     local layout = Instance.new("UIListLayout")
     layout.Padding = UDim.new(0, 10)
@@ -214,7 +195,10 @@ function Neo:CreateTab(name: string)
     local padding = Instance.new("UIPadding")
     padding.PaddingTop = UDim.new(0, 15)
     padding.PaddingLeft = UDim.new(0, 15)
+    padding.PaddingBottom = UDim.new(0, 4) -- 4px bottom gap
     padding.Parent = page
+
+    self.Pages[name] = page
 
     tab.Page = page
     tab._mainFrame = self.MainFrame
@@ -234,9 +218,9 @@ function Neo:CreateTab(name: string)
     return tab
 end
 
-----------------------------------------------------------------------
+----------------------------------------------------------------------  
 -- Components
-----------------------------------------------------------------------
+----------------------------------------------------------------------  
 function Neo:CreateLabel(text: string)
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -20, 0, 25)
@@ -391,7 +375,6 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
--- Rebind Component
 function Neo:CreateRebind(text: string, defaultKey: Enum.KeyCode, callback: (Enum.KeyCode)->())
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 265, 0, 30)
@@ -399,7 +382,7 @@ function Neo:CreateRebind(text: string, defaultKey: Enum.KeyCode, callback: (Enu
     frame.Parent = self.Page
 
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -80, 1, 0)
+    lbl.Size = UDim2.new(0.6, 0, 1, 0)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
     lbl.Font = Enum.Font.Gotham
@@ -409,13 +392,13 @@ function Neo:CreateRebind(text: string, defaultKey: Enum.KeyCode, callback: (Enu
     lbl.Parent = frame
 
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 70, 1, 0)
-    btn.Position = UDim2.new(1, -70, 0, 0)
+    btn.Size = UDim2.new(0.4, -5, 1, 0)
+    btn.Position = UDim2.new(0.6, 5, 0, 0)
     btn.BackgroundColor3 = colors.Button
     btn.Text = defaultKey.Name
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 14
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
     btn.Parent = frame
@@ -428,21 +411,15 @@ function Neo:CreateRebind(text: string, defaultKey: Enum.KeyCode, callback: (Enu
     btn.MouseButton1Click:Connect(function()
         if listening then return end
         listening = true
-        btn.Text = "..."
-        local inputBeganConn, inputEndedConn
+        btn.Text = "Press key..."
 
-        inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
-            if gp then return end
+        local conn
+        conn = UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.Keyboard then
-                inputEndedConn = UserInputService.InputEnded:Connect(function(ended)
-                    if ended.KeyCode == input.KeyCode then
-                        callback(input.KeyCode)
-                        btn.Text = input.KeyCode.Name
-                        listening = false
-                        inputBeganConn:Disconnect()
-                        inputEndedConn:Disconnect()
-                    end
-                end)
+                conn:Disconnect()
+                listening = false
+                btn.Text = input.KeyCode.Name
+                if callback then callback(input.KeyCode) end
             end
         end)
     end)
