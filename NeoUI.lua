@@ -506,13 +506,14 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
+    -- Currently selected option
     local selected = options[1]
 
-    -- Dropdown box
+    -- Main dropdown box
     local box = Instance.new("TextButton")
     box.Size = UDim2.new(1, 0, 1, 0)
-    box.BackgroundColor3 = colors.Button
-    box.Text = labelText .. ": " .. selected .. " ▼"
+    box.BackgroundColor3 = colors.Content
+    box.Text = selected
     box.TextColor3 = Color3.fromRGB(255, 255, 255)
     box.Font = Enum.Font.Gotham
     box.TextSize = 14
@@ -523,6 +524,17 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = box
+
+    -- Dropdown arrow
+    local arrow = Instance.new("TextLabel")
+    arrow.Size = UDim2.new(0, 20, 1, 0)
+    arrow.Position = UDim2.new(1, -25, 0, 0)
+    arrow.BackgroundTransparency = 1
+    arrow.Text = "▾"
+    arrow.TextColor3 = Color3.fromRGB(200, 200, 200)
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 14
+    arrow.Parent = box
 
     -- Dropdown list container
     local list = Instance.new("Frame")
@@ -607,7 +619,7 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
 
         optBtn.MouseButton1Click:Connect(function()
             selected = option
-            box.Text = labelText .. ": " .. selected .. " ▼"
+            box.Text = selected
             if callback then callback(option) end
             closeDropdown()
         end)
