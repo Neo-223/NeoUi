@@ -528,7 +528,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     dropBtn.AutoButtonColor = false
     dropBtn.Parent = frame
 
-    -- Only top corners rounded
+    -- Rounded corners for main button
     local dropCorner = Instance.new("UICorner")
     dropCorner.CornerRadius = UDim.new(0, 6)
     dropCorner.Parent = dropBtn
@@ -553,7 +553,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     local function closeDropdown()
         listFrame.Visible = false
         listFrame.Size = UDim2.new(1, 0, 0, 0)
-        dropCorner.CornerRadius = UDim.new(0, 6) -- restore top rounding
+        dropCorner.CornerRadius = UDim.new(0, 6) -- restore full rounding
     end
 
     for i, opt in ipairs(options) do
@@ -568,11 +568,15 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         optBtn.AutoButtonColor = false
         optBtn.Parent = listFrame
 
-        -- Only bottom corners of last option are rounded
-        if i == #options then
-            local lastCorner = Instance.new("UICorner")
-            lastCorner.CornerRadius = UDim.new(0, 6)
-            lastCorner.Parent = optBtn
+        -- Round only outer edges
+        if i == 1 then
+            local topCorner = Instance.new("UICorner")
+            topCorner.CornerRadius = UDim.new(0, 6)
+            topCorner.Parent = optBtn
+        elseif i == #options then
+            local bottomCorner = Instance.new("UICorner")
+            bottomCorner.CornerRadius = UDim.new(0, 6)
+            bottomCorner.Parent = optBtn
         end
 
         optBtn.MouseButton1Click:Connect(function()
@@ -593,7 +597,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         listFrame.Visible = not listFrame.Visible
         if listFrame.Visible then
             listFrame.Size = UDim2.new(1, 0, 0, #options * 25)
-            dropCorner.CornerRadius = UDim.new(0, 6) -- keep top rounded
+            dropCorner.CornerRadius = UDim.new(0, 6) -- keep top rounded visually
         else
             closeDropdown()
         end
