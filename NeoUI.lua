@@ -528,14 +528,14 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     dropBtn.AutoButtonColor = false
     dropBtn.Parent = frame
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = dropBtn
+    -- Only the main button is rounded
+    local dropCorner = Instance.new("UICorner")
+    dropCorner.CornerRadius = UDim.new(0, 6)
+    dropCorner.Parent = dropBtn
 
-    -- Dropdown options list (placed under the main frame, not inside button)
     local listFrame = Instance.new("Frame")
     listFrame.Size = UDim2.new(1, 0, 0, 0)
-    listFrame.Position = UDim2.new(0, 0, 0, 47) -- appears just below button
+    listFrame.Position = UDim2.new(0, 0, 0, 47)
     listFrame.BackgroundColor3 = colors.Content
     listFrame.BorderSizePixel = 0
     listFrame.Visible = false
@@ -545,7 +545,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     local listLayout = Instance.new("UIListLayout")
     listLayout.FillDirection = Enum.FillDirection.Vertical
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 0) -- no spacing between options
+    listLayout.Padding = UDim.new(0, 0)
     listLayout.Parent = listFrame
 
     local function closeDropdown()
@@ -553,7 +553,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         listFrame.Size = UDim2.new(1, 0, 0, 0)
     end
 
-    for _, opt in ipairs(options) do
+    for i, opt in ipairs(options) do
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, 0, 0, 25)
         optBtn.BackgroundColor3 = colors.Button
@@ -564,6 +564,13 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         optBtn.BorderSizePixel = 0
         optBtn.AutoButtonColor = false
         optBtn.Parent = listFrame
+
+        -- Round only the last option
+        if i == #options then
+            local lastCorner = Instance.new("UICorner")
+            lastCorner.CornerRadius = UDim.new(0, 6)
+            lastCorner.Parent = optBtn
+        end
 
         optBtn.MouseButton1Click:Connect(function()
             dropBtn.Text = opt
@@ -588,7 +595,6 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         end
     end)
 
-    -- Outside click closes dropdown
     local UIS = game:GetService("UserInputService")
     table.insert(self._connections, UIS.InputBegan:Connect(function(input, gpe)
         if gpe then return end
