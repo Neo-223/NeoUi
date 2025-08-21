@@ -1,42 +1,38 @@
 local NeoUI = {}
 NeoUI.__index = NeoUI
 
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local defaultToggleKey = Enum.KeyCode.Insert
+local defaultUnloadKey = Enum.KeyCode.Delete
+
+NeoUI.Colors = {
+    Sidebar = Color3.fromRGB(28, 28, 34),
+    Content = Color3.fromRGB(24, 24, 30),
+    Topbar = Color3.fromRGB(30, 30, 38),
+    ButtonIdle = Color3.fromRGB(45, 45, 55),
+    ButtonText = Color3.fromRGB(255, 255, 255),
+    ButtonHighlight = Color3.fromRGB(0, 170, 255),
+    TitleText = Color3.fromRGB(255, 255, 255),
+    SectionHeaderText = Color3.fromRGB(255, 255, 255),
+    LabelText = Color3.fromRGB(255, 255, 255),
+    ValueText = Color3.fromRGB(150, 200, 255),
+    ToggleOff = Color3.fromRGB(45, 45, 55),
+    ToggleOn = Color3.fromRGB(0, 200, 120),
+    SliderBar = Color3.fromRGB(45, 45, 55),
+    SliderFill = Color3.fromRGB(0, 170, 255),
+    Accent = Color3.fromRGB(0, 170, 255),
+}
+
 function NeoUI.new()
     local self = setmetatable({}, NeoUI)
 
-    self.Players = game:GetService("Players")
-    self.UserInputService = game:GetService("UserInputService")
-    self.LocalPlayer = self.Players.LocalPlayer
-    self.PlayerGui = self.LocalPlayer:WaitForChild("PlayerGui")
-    
-    self.toggleKey = Enum.KeyCode.Insert
-    self.unloadKey = Enum.KeyCode.Delete
-
-    self.colors = {
-        Sidebar           = Color3.fromRGB(28, 28, 34),
-        Content           = Color3.fromRGB(24, 24, 30),
-        Topbar            = Color3.fromRGB(30, 30, 38),
-        ButtonIdle        = Color3.fromRGB(45, 45, 55),
-        ButtonText        = Color3.fromRGB(255, 255, 255),
-        ButtonHighlight   = Color3.fromRGB(0, 170, 255),
-        TitleText         = Color3.fromRGB(255, 255, 255),
-        SectionHeaderText = Color3.fromRGB(255, 255, 255),
-        LabelText         = Color3.fromRGB(255, 255, 255),
-        ValueText         = Color3.fromRGB(150, 200, 255),
-        ToggleOff         = Color3.fromRGB(45, 45, 55),
-        ToggleOn          = Color3.fromRGB(0, 200, 120),
-        SliderBar         = Color3.fromRGB(45, 45, 55),
-        SliderFill        = Color3.fromRGB(0, 170, 255),
-        Accent            = Color3.fromRGB(0, 170, 255),
-    }
-
-    self.isBindingKey = false
-    self.suppressKeyCode = nil
-
-    -- Creating the UI structure
     self.screenGui = Instance.new("ScreenGui")
-    self.screenGui.Name = "NeoModMenu"
-    self.screenGui.Parent = self.PlayerGui
+    self.screenGui.Name = "NeoUI"
+    self.screenGui.Parent = PlayerGui
     self.screenGui.ResetOnSpawn = false
     self.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -54,85 +50,73 @@ function NeoUI.new()
     mainCorner.CornerRadius = UDim.new(0, 10)
     mainCorner.Parent = self.mainFrame
 
-    -- Topbar
     self.topBar = Instance.new("Frame")
     self.topBar.Size = UDim2.new(1, 0, 0, 40)
-    self.topBar.BackgroundColor3 = self.colors.Topbar
+    self.topBar.BackgroundColor3 = NeoUI.Colors.Topbar
     self.topBar.BorderSizePixel = 0
     self.topBar.Parent = self.mainFrame
 
-    -- Title Label (changed to "NeoUI")
     self.titleLabel = Instance.new("TextLabel")
     self.titleLabel.Size = UDim2.new(1, -10, 1, 0)
     self.titleLabel.Position = UDim2.new(0, 10, 0, 0)
     self.titleLabel.BackgroundTransparency = 1
-    self.titleLabel.Text = "NeoUI" -- Changed to NeoUI
+    self.titleLabel.Text = "NeoUI"
     self.titleLabel.Font = Enum.Font.GothamBold
     self.titleLabel.TextSize = 20
-    self.titleLabel.TextColor3 = self.colors.TitleText
+    self.titleLabel.TextColor3 = NeoUI.Colors.TitleText
     self.titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     self.titleLabel.Parent = self.topBar
 
-    -- Sidebar
     self.sidebar = Instance.new("Frame")
     self.sidebar.Size = UDim2.new(0, 150, 1, -40)
     self.sidebar.Position = UDim2.new(0, 0, 0, 40)
-    self.sidebar.BackgroundColor3 = self.colors.Sidebar
+    self.sidebar.BackgroundColor3 = NeoUI.Colors.Sidebar
     self.sidebar.BorderSizePixel = 0
     self.sidebar.Parent = self.mainFrame
 
-    -- Create sidebar layout
+    local sidebarPadding = Instance.new("UIPadding")
+    sidebarPadding.PaddingTop = UDim.new(0, 8)
+    sidebarPadding.PaddingLeft = UDim.new(0, 10)
+    sidebarPadding.PaddingRight = UDim.new(0, 10)
+    sidebarPadding.Parent = self.sidebar
+
     local sidebarLayout = Instance.new("UIListLayout")
     sidebarLayout.FillDirection = Enum.FillDirection.Vertical
     sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     sidebarLayout.Padding = UDim.new(0, 6)
     sidebarLayout.Parent = self.sidebar
 
-    -- Create tabs
-    self.demoTab = self:createTabButton("Demo")
-    self.settingsTab = self:createTabButton("Settings")
-
-    -- Content frame
     self.contentFrame = Instance.new("Frame")
     self.contentFrame.Size = UDim2.new(1, -150, 1, -40)
     self.contentFrame.Position = UDim2.new(0, 150, 0, 40)
-    self.contentFrame.BackgroundColor3 = self.colors.Content
+    self.contentFrame.BackgroundColor3 = NeoUI.Colors.Content
     self.contentFrame.BorderSizePixel = 0
     self.contentFrame.Parent = self.mainFrame
 
     self.pages = {}
 
-    -- Create pages
-    self.demoPage = self:createPage("Demo")
-    self.settingsPage = self:createPage("Settings")
-
-    -- Setup default page and highlight (Settings tab is always visible)
-    self:switchPage("Settings")
-    self:highlightTab(self.settingsTab)
-
-    -- Create settings page keybinds
-    self:createKeybindButton("Toggle Menu", self.toggleKey, self.settingsPage)
-    self:createKeybindButton("Unload Menu", self.unloadKey, self.settingsPage)
-
     return self
 end
 
-function NeoUI:createTabButton(name)
+function NeoUI:createTabButton(name: string, callback: (button: TextButton)->())
     local btn = Instance.new("TextButton")
     btn.Name = name .. "Tab"
     btn.Size = UDim2.new(1, 0, 0, 35)
-    btn.BackgroundColor3 = self.colors.ButtonIdle
-    btn.TextColor3 = self.colors.ButtonText
+    btn.BackgroundColor3 = NeoUI.Colors.ButtonIdle
+    btn.TextColor3 = NeoUI.Colors.ButtonText
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 16
     btn.Text = name
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
+
     btn.Parent = self.sidebar
+    btn.MouseButton1Click:Connect(function() callback(btn) end)
+
     return btn
 end
 
-function NeoUI:createPage(name)
+function NeoUI:createPage(name: string)
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -156,58 +140,31 @@ function NeoUI:createPage(name)
     return page
 end
 
-function NeoUI:createKeybindButton(text, key, parent)
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(0, 260, 0, 30)
-    row.BackgroundTransparency = 1
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 1, 0)
-    btn.BackgroundColor3 = self.colors.ButtonIdle
-    btn.Text = text .. ": " .. key.Name
-    btn.TextColor3 = self.colors.ButtonText
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    btn.BorderSizePixel = 0
-    btn.AutoButtonColor = false
-    btn.Parent = row
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function()
-        btn.Text = text .. ": Press a key..."
-        self.isBindingKey = true
-        self.suppressKeyCode = nil
-
-        local beganConn, endedConn
-        beganConn = self.UserInputService.InputBegan:Connect(function(input, gpe)
-            if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode ~= Enum.KeyCode.Unknown then
-                key = input.KeyCode
-                btn.Text = text .. ": " .. key.Name
-                self.suppressKeyCode = input.KeyCode
-                if endedConn then endedConn:Disconnect() end
-                endedConn = self.UserInputService.InputEnded:Connect(function(endInput, _)
-                    if endInput.UserInputType == Enum.UserInputType.Keyboard and endInput.KeyCode == self.suppressKeyCode then
-                        self.isBindingKey = false
-                        self.suppressKeyCode = nil
-                        if beganConn then beganConn:Disconnect() end
-                        if endedConn then endedConn:Disconnect() end
-                    end
-                end)
-            end
-        end)
-    end)
-
-    row.Parent = parent
-end
-
-function NeoUI:switchPage(pageName)
+function NeoUI:switchPage(name: string)
     for _, page in pairs(self.pages) do
         page.Visible = false
     end
-    self.pages[pageName].Visible = true
+    if self.pages[name] then
+        self.pages[name].Visible = true
+    end
 end
 
-function NeoUI
+function NeoUI:setupKeybindings(toggleKey: Enum.KeyCode, unloadKey: Enum.KeyCode)
+    self.toggleKey = toggleKey or defaultToggleKey
+    self.unloadKey = unloadKey or defaultUnloadKey
+
+    local inputConn
+    inputConn = UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == self.toggleKey then
+                self.mainFrame.Visible = not self.mainFrame.Visible
+            elseif input.KeyCode == self.unloadKey then
+                if inputConn then inputConn:Disconnect() end
+                self.screenGui:Destroy()
+            end
+        end
+    end)
+end
+
+return NeoUI
