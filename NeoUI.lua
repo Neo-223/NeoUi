@@ -500,4 +500,111 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
+function Neo:CreateDropdown(text: string, options: {string}, default: string?, callback: (string)->())
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 260, 0, 40)
+    frame.BackgroundTransparency = 1
+    frame.Parent = self.Page
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, 0, 0, 20)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = frame
+
+    local dropBtn = Instance.new("TextButton")
+    dropBtn.Size = UDim2.new(1, 0, 0, 20)
+    dropBtn.Position = UDim2.new(0, 0, 0, 20)
+    dropBtn.BackgroundColor3 = colors.Button
+    dropBtn.Text = default or (options[1] or "Select...")
+    dropBtn.Font = Enum.Font.Gotham
+    dropBtn.TextSize = 14
+    dropBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    dropBtn.BorderSizePixel = 0
+    dropBtn.AutoButtonColor = false
+    dropBtn.Parent = frame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = dropBtn
+
+    local listFrame = Instance.new("Frame")
+    listFrame.Size = UDim2.new(1, 0, 0, 0)
+    listFrame.Position = UDim2.new(0, 0, 1, 0)
+    listFrame.BackgroundColor3 = colors.Content
+    listFrame.BorderSizePixel = 0
+    listFrame.Visible = false
+    listFrame.ClipsDescendants = true
+    listFrame.Parent = frame
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.FillDirection = Enum.FillDirection.Vertical
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = listFrame
+
+    local function closeDropdown()
+        listFrame.Visible = false
+        listFrame.Size = UDim2.new(1, 0, 0, 0)
+    end
+
+    for _, opt in ipairs(options) do
+        local optBtn = Instance.new("TextButton")
+        optBtn.Size = UDim2.new(1, 0, 0, 25)
+        optBtn.BackgroundColor3 = colors.Button
+        optBtn.Text = opt
+        optBtn.Font = Enum.Font.Gotham
+        optBtn.TextSize = 14
+        optBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+        optBtn.BorderSizePixel = 0
+        optBtn.AutoButtonColor = false
+        optBtn.Parent = listFrame
+
+        local optCorner = Instance.new("UICorner")
+        optCorner.CornerRadius = UDim.new(0, 6)
+        optCorner.Parent = optBtn
+
+        optBtn.MouseButton1Click:Connect(function()
+            dropBtn.Text = opt
+            closeDropdown()
+            if callback then callback(opt) end
+        end)
+
+        optBtn.MouseEnter:Connect(function()
+            optBtn.BackgroundColor3 = colors.Accent
+        end)
+        optBtn.MouseLeave:Connect(function()
+            optBtn.BackgroundColor3 = colors.Button
+        end)
+    end
+
+    dropBtn.MouseButton1Click:Connect(function()
+        listFrame.Visible = not listFrame.Visible
+        if listFrame.Visible then
+            listFrame.Size = UDim2.new(1, 0, 0, #options * 28)
+        else
+            closeDropdown()
+        end
+    end)
+
+    -- Outside click hides it
+    local UIS = game:GetService("UserInputService")
+    table.insert(self._connections, UIS.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if listFrame.Visible and input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mousePos = UIS:GetMouseLocation()
+            local absPos, absSize = listFrame.AbsolutePosition, listFrame.AbsoluteSize
+            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X
+                and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
+                closeDropdown()
+            end
+        end
+    end))
+
+    return frame
+end
+
 return Neo
