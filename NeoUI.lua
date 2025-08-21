@@ -524,7 +524,7 @@ function Neo:CreateDropdown(text: string, options: {string}, callback: (string)-
 
     -- Dropdown container (hidden by default)
     local dropdown = Instance.new("ScrollingFrame")
-    dropdown.Size = UDim2.new(1, 0, 0, 0) -- start collapsed
+    dropdown.Size = UDim2.new(1, 0, 0, 0) -- collapsed
     dropdown.Position = UDim2.new(0, 0, 1, 2)
     dropdown.BackgroundColor3 = colors.Sidebar
     dropdown.BorderSizePixel = 0
@@ -578,7 +578,7 @@ function Neo:CreateDropdown(text: string, options: {string}, callback: (string)-
             local targetHeight = (28 + 2) * count + 4
             dropdown.Size = UDim2.new(1, 0, 0, targetHeight)
 
-            -- 🔹 Check if going out of content view, flip upwards
+            -- 🔹 Flip upward if no space below
             local absPos = frame.AbsolutePosition.Y
             local absSize = frame.AbsoluteSize.Y
             local screenSize = self._mainFrame.AbsoluteSize.Y
@@ -601,14 +601,17 @@ function Neo:CreateDropdown(text: string, options: {string}, callback: (string)-
             local guiInset = game:GetService("GuiService"):GetGuiInset()
             mousePos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
             if not dropdown.AbsolutePosition or not dropdown.AbsoluteSize then return end
+
             local within = (mousePos.X >= dropdown.AbsolutePosition.X
                 and mousePos.X <= dropdown.AbsolutePosition.X + dropdown.AbsoluteSize.X
                 and mousePos.Y >= dropdown.AbsolutePosition.Y
                 and mousePos.Y <= dropdown.AbsolutePosition.Y + dropdown.AbsoluteSize.Y)
+
             local withinBtn = (mousePos.X >= btn.AbsolutePosition.X
                 and mousePos.X <= btn.AbsolutePosition.X + btn.AbsoluteSize.X
                 and mousePos.Y >= btn.AbsolutePosition.Y
                 and mousePos.Y <= btn.AbsolutePosition.Y + btn.AbsoluteSize.Y)
+
             if not within and not withinBtn then
                 isOpen = false
                 dropdown.Visible = false
