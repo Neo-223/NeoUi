@@ -89,7 +89,6 @@ function Neo:CreateWindow(title: string)
     local window = {}
     setmetatable(window, Neo)
 
-   
     window._state = {
         isBindingKey = false,
         suppressKeyCode = nil,
@@ -97,7 +96,6 @@ function Neo:CreateWindow(title: string)
         unloadKey = Enum.KeyCode.Delete,
     }
 
-   
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NeoModMenu"
     screenGui.ResetOnSpawn = false
@@ -105,7 +103,6 @@ function Neo:CreateWindow(title: string)
     screenGui.Parent = PlayerGui
     window.Gui = screenGui
 
-    
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
     mainFrame.Position = UDim2.new(0.5, -220, 0.5, -200)
@@ -121,7 +118,6 @@ function Neo:CreateWindow(title: string)
     mainCorner.CornerRadius = UDim.new(0, 10)
     mainCorner.Parent = mainFrame
 
-    
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundColor3 = colors.Topbar
@@ -139,7 +135,6 @@ function Neo:CreateWindow(title: string)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
-    
     local sidebar = Instance.new("ScrollingFrame")
     sidebar.Name = "Sidebar"
     sidebar.Size = UDim2.new(0, 150, 1, -40)
@@ -165,7 +160,6 @@ function Neo:CreateWindow(title: string)
     sidebarLayout.Padding = UDim.new(0, 6)
     sidebarLayout.Parent = sidebar
 
-    
     local contentHolder = Instance.new("ScrollingFrame")
     contentHolder.Name = "ContentHolder"
     contentHolder.Size = UDim2.new(1, -150, 1, -40)
@@ -178,21 +172,19 @@ function Neo:CreateWindow(title: string)
     contentHolder.Parent = mainFrame
     window.Content = contentHolder
 
-    local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 0)   -- no top padding here anymore
-    padding.PaddingLeft = UDim.new(0, 15)
-    padding.PaddingBottom = UDim.new(0, 10)
-    padding.Parent = page
+    -- ✅ global top padding for all pages
+    local chPadding = Instance.new("UIPadding")
+    chPadding.PaddingTop = UDim.new(0, 20)      
+    chPadding.PaddingLeft = UDim.new(0, 0)     
+    chPadding.PaddingBottom = UDim.new(0, 4)   
+    chPadding.Parent = contentHolder
 
-
-   
     window.Pages = {}
     window._hasDefaultTab = false
     window._tabOrder = 0
     window._settingsCreated = false
     window._connections = {}
 
-    
     function window:Toggle()
         self.MainFrame.Visible = not self.MainFrame.Visible
     end
@@ -203,7 +195,6 @@ function Neo:CreateWindow(title: string)
         if self.Gui then self.Gui:Destroy() end
     end
 
-    
     table.insert(window._connections, UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if window._state.isBindingKey then return end
@@ -253,6 +244,7 @@ function Neo:_createSettingsTab()
     page.Size = UDim2.new(1, 0, 0, 0)
     page.BackgroundTransparency = 1
     page.Visible = false
+    page.AutomaticSize = Enum.AutomaticSize.Y -- ✅ auto-resize
     page.Parent = self.Content
 
     local layout = Instance.new("UIListLayout")
@@ -262,12 +254,11 @@ function Neo:_createSettingsTab()
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     layout.Parent = page
 
-local padding = Instance.new("UIPadding")
-padding.PaddingTop = UDim.new(0, 40) -- was 25, bump up to 40
-padding.PaddingLeft = UDim.new(0, 15)
-padding.PaddingBottom = UDim.new(0, 10) -- optional, keeps spacing clean
-padding.Parent = page
-
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 20) -- ✅ consistent margin
+    padding.PaddingLeft = UDim.new(0, 15)
+    padding.PaddingBottom = UDim.new(0, 10)
+    padding.Parent = page
 
     self.Pages["Settings"] = page
 
@@ -292,7 +283,6 @@ padding.Parent = page
 end
 
 function Neo:CreateTab(name: string)
-    
     if string.lower(name) == "settings" then
         warn("[Neo] 'Settings' tab name is reserved by the library. Your tab will be named 'Settings (Custom)'.")
         name = "Settings (Custom)"
@@ -324,6 +314,7 @@ function Neo:CreateTab(name: string)
     page.Size = UDim2.new(1, 0, 0, 0)
     page.BackgroundTransparency = 1
     page.Visible = false
+    page.AutomaticSize = Enum.AutomaticSize.Y -- ✅ auto-resize
     page.Parent = self.Content
 
     local layout = Instance.new("UIListLayout")
@@ -334,8 +325,9 @@ function Neo:CreateTab(name: string)
     layout.Parent = page
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 25)
+    padding.PaddingTop = UDim.new(0, 20) -- ✅ consistent margin
     padding.PaddingLeft = UDim.new(0, 15)
+    padding.PaddingBottom = UDim.new(0, 10)
     padding.Parent = page
 
     self.Pages[name] = page
@@ -471,49 +463,71 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.BorderSizePixel = 0
     bar.Parent = frame
 
-    local fill = Instance.new("Frame")
-    local startAlpha = (defaultValue - min) / math.max(1, (max - min))
-    fill.Size = UDim2.new(math.clamp(startAlpha, 0, 1), 0, 1, 0)
+        local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(0, 0, 1, 0)
     fill.BackgroundColor3 = colors.Accent
     fill.BorderSizePixel = 0
     fill.Parent = bar
 
-    local dragging = false
-    local function setFromAlpha(alpha: number)
+    local uicorner = Instance.new("UICorner")
+    uicorner.CornerRadius = UDim.new(0, 4)
+    uicorner.Parent = bar
+
+    local uicornerFill = Instance.new("UICorner")
+    uicornerFill.CornerRadius = UDim.new(0, 4)
+    uicornerFill.Parent = fill
+
+    -- Label above slider
+    local sliderLabel = Instance.new("TextLabel")
+    sliderLabel.Size = UDim2.new(1, 0, 0, 20)
+    sliderLabel.Position = UDim2.new(0, 0, 0, -20)
+    sliderLabel.BackgroundTransparency = 1
+    sliderLabel.Text = name .. ": " .. tostring(default)
+    sliderLabel.TextColor3 = colors.Text
+    sliderLabel.Font = Enum.Font.Gotham
+    sliderLabel.TextSize = 14
+    sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    sliderLabel.Parent = frame
+
+    -- Update slider fill + text
+    local function setSliderValue(alpha: number)
         alpha = math.clamp(alpha, 0, 1)
+        local value = math.floor(min + (max - min) * alpha)
         fill.Size = UDim2.new(alpha, 0, 1, 0)
-        local value = math.floor(min + (max - min) * alpha + 0.5)
-        valLbl.Text = tostring(value)
-        if callback then callback(value) end
+        sliderLabel.Text = name .. ": " .. tostring(value)
+        callback(value)
     end
 
-    local function updateFromMouse(px: number)
-        local relX = (px - bar.AbsolutePosition.X) / bar.AbsoluteSize.X
-        setFromAlpha(relX)
-    end
+    -- Handle dragging
+    local UserInputService = game:GetService("UserInputService")
+    local dragging = false
 
     bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            if self._mainFrame then self._mainFrame.Active = false end
-            updateFromMouse(input.Position.X)
+            local px = UserInputService:GetMouseLocation().X
+            local relX = (px - bar.AbsolutePosition.X) / bar.AbsoluteSize.X
+            setSliderValue(relX)
         end
     end)
 
     UserInputService.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            updateFromMouse(input.Position.X)
+            local px = UserInputService:GetMouseLocation().X
+            local relX = (px - bar.AbsolutePosition.X) / bar.AbsoluteSize.X
+            setSliderValue(relX)
         end
     end)
 
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
-            if self._mainFrame then self._mainFrame.Active = true end
         end
     end)
 
+    -- Initialize with default
+    local alphaDefault = (default - min) / (max - min)
+    setSliderValue(alphaDefault)
+
     return frame
 end
-
-return Neo
