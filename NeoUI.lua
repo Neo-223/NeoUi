@@ -155,7 +155,7 @@ end
 ----------------------------------------------------------------------
 -- Tabs
 ----------------------------------------------------------------------
-function Neo:CreateTab(name: string, isSettings: boolean)
+function Neo:CreateTab(name: string, isSettings: boolean?)
     local tab = {}
     setmetatable(tab, Neo)
 
@@ -172,20 +172,20 @@ function Neo:CreateTab(name: string, isSettings: boolean)
     btn.AutoButtonColor = false
     btn.Parent = self.Sidebar
 
-    if isSettings then
-        btn.LayoutOrder = 1_000_000 -- force to bottom
-    end
-
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
-    -- Page
-    local page = Instance.new("Frame")
+    -- Page (scrollable, scrollbar hidden)
+    local page = Instance.new("ScrollingFrame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, 0)
     page.BackgroundTransparency = 1
     page.Visible = false
+    page.BorderSizePixel = 0
+    page.CanvasSize = UDim2.new(0, 0, 0, 0)
+    page.AutomaticCanvasSize = Enum.AutomaticSize.None
+    page.ScrollBarThickness = 0 -- ✅ hides scrollbar
     page.Parent = self.Content
 
     local layout = Instance.new("UIListLayout")
@@ -200,11 +200,14 @@ function Neo:CreateTab(name: string, isSettings: boolean)
     padding.PaddingLeft = UDim.new(0, 15)
     padding.Parent = page
 
-    self.Pages[name] = page
+    -- ✅ Dynamic canvas resize with 2px gap at bottom
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 2)
+    end)
 
+    self.Pages[name] = page
     tab.Page = page
-    tab._mainFrame = self.MainFrame -- for slider drag-disabling
-    tab._window = self             -- for keybind state access
+    tab._mainFrame = self.MainFrame
 
     local function selectThis()
         for _, p in pairs(self.Pages) do p.Visible = false end
@@ -217,6 +220,10 @@ function Neo:CreateTab(name: string, isSettings: boolean)
     if not self._hasDefaultTab and not isSettings then
         self._hasDefaultTab = true
         selectThis()
+    end
+
+    if isSettings then
+        btn.LayoutOrder = 9999 -- settings always at bottom
     end
 
     return tab
