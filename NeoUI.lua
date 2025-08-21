@@ -532,18 +532,20 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = dropBtn
 
+    -- Dropdown options list (placed under the main frame, not inside button)
     local listFrame = Instance.new("Frame")
     listFrame.Size = UDim2.new(1, 0, 0, 0)
-    listFrame.Position = UDim2.new(0, 0, 1, 0)
+    listFrame.Position = UDim2.new(0, 0, 0, 47) -- appears just below button
     listFrame.BackgroundColor3 = colors.Content
     listFrame.BorderSizePixel = 0
     listFrame.Visible = false
     listFrame.ClipsDescendants = true
-    listFrame.Parent = dropBtn
+    listFrame.Parent = frame
 
     local listLayout = Instance.new("UIListLayout")
     listLayout.FillDirection = Enum.FillDirection.Vertical
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 0) -- no spacing between options
     listLayout.Parent = listFrame
 
     local function closeDropdown()
@@ -563,10 +565,6 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         optBtn.AutoButtonColor = false
         optBtn.Parent = listFrame
 
-        local optCorner = Instance.new("UICorner")
-        optCorner.CornerRadius = UDim.new(0, 6)
-        optCorner.Parent = optBtn
-
         optBtn.MouseButton1Click:Connect(function()
             dropBtn.Text = opt
             closeDropdown()
@@ -584,7 +582,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     dropBtn.MouseButton1Click:Connect(function()
         listFrame.Visible = not listFrame.Visible
         if listFrame.Visible then
-            listFrame.Size = UDim2.new(1, 0, 0, #options * 28)
+            listFrame.Size = UDim2.new(1, 0, 0, #options * 25)
         else
             closeDropdown()
         end
@@ -596,15 +594,14 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         if gpe then return end
         if listFrame.Visible and input.UserInputType == Enum.UserInputType.MouseButton1 then
             local mousePos = UIS:GetMouseLocation()
-            local absPos, absSize = dropBtn.AbsolutePosition, dropBtn.AbsoluteSize
-            local listPos, listSize = listFrame.AbsolutePosition, listFrame.AbsoluteSize
 
-            local insideBtn = mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X
-                and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y
-            local insideList = mousePos.X >= listPos.X and mousePos.X <= listPos.X + listSize.X
-                and mousePos.Y >= listPos.Y and mousePos.Y <= listPos.Y + listSize.Y
+            local function inside(gui)
+                local absPos, absSize = gui.AbsolutePosition, gui.AbsoluteSize
+                return mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X
+                    and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y
+            end
 
-            if not insideBtn and not insideList then
+            if not inside(dropBtn) and not inside(listFrame) then
                 closeDropdown()
             end
         end
