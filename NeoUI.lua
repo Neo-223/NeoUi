@@ -195,7 +195,7 @@ function Neo:CreateTab(name: string)
     local padding = Instance.new("UIPadding")
     padding.PaddingTop = UDim.new(0, 15)
     padding.PaddingLeft = UDim.new(0, 15)
-    padding.PaddingBottom = UDim.new(0, 4) -- 4px bottom gap
+    padding.PaddingBottom = UDim.new(0, 8) -- 4px bottom gap
     padding.Parent = page
 
     self.Pages[name] = page
