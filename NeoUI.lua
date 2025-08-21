@@ -502,119 +502,115 @@ end
 
 function Neo:CreateDropdown(labelText: string, options: {string}, callback: (string)->())
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 265, 0, 30)
+    frame.Size = UDim2.new(0, 260, 0, 30)
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
-    local selected = options[1]
+    -- Label
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -40, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 16
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = frame
 
-    -- Main dropdown box
-    local box = Instance.new("TextButton")
-    box.Size = UDim2.new(1, 0, 1, 0)
-    box.BackgroundColor3 = colors.Content
-    box.Text = selected
-    box.TextColor3 = Color3.fromRGB(255, 255, 255)
-    box.Font = Enum.Font.Gotham
-    box.TextSize = 14
-    box.TextXAlignment = Enum.TextXAlignment.Left
-    box.BorderSizePixel = 0
-    box.AutoButtonColor = false
-    box.Parent = frame
+    -- Dropdown button
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 30, 0, 30)
+    button.Position = UDim2.new(1, -35, 0, 0)
+    button.BackgroundColor3 = colors.Button
+    button.Text = "▾"
+    button.BorderSizePixel = 0
+    button.AutoButtonColor = false
+    button.Parent = frame
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = box
+    corner.Parent = button
 
-    -- Dropdown list container
-    local list = Instance.new("Frame")
-    list.Size = UDim2.new(1, 0, 0, 0)
-    list.Position = UDim2.new(0, 0, 1, 2)
-    list.BackgroundColor3 = colors.Content
-    list.BorderSizePixel = 0
-    list.ClipsDescendants = true
-    list.Parent = frame
+    -- Dropdown list
+    local dropdown = Instance.new("Frame")
+    dropdown.Size = UDim2.new(0, 260, 0, 0)
+    dropdown.Position = UDim2.new(0, 0, 1, 2)
+    dropdown.BackgroundColor3 = colors.Content
+    dropdown.BorderSizePixel = 0
+    dropdown.Visible = false
+    dropdown.Parent = frame
 
-    local layout = Instance.new("UIListLayout")
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 2)
-    layout.Parent = list
+    local dropdownCorner = Instance.new("UICorner")
+    dropdownCorner.CornerRadius = UDim.new(0, 6)
+    dropdownCorner.Parent = dropdown
 
-    local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 2)
-    padding.PaddingBottom = UDim.new(0, 2)
-    padding.PaddingLeft = UDim.new(0, 4)
-    padding.PaddingRight = UDim.new(0, 4)
-    padding.Parent = list
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 2)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = dropdown
 
-    local expanded = false
-
-    local function closeDropdown()
-        list:TweenSize(UDim2.new(1, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-        expanded = false
+    -- Function to toggle dropdown
+    local isOpen = false
+    local function toggleDropdown()
+        isOpen = not isOpen
+        dropdown.Visible = isOpen
     end
 
-    local function openDropdown()
-        local totalHeight = #options * 28
-        list:TweenSize(UDim2.new(1, 0, 0, totalHeight), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-        expanded = true
-    end
+    button.MouseButton1Click:Connect(toggleDropdown)
 
-    box.MouseButton1Click:Connect(function()
-        if expanded then
-            closeDropdown()
-        else
-            openDropdown()
-        end
-    end)
-
-    -- Close when clicking outside
-    local outsideConn
-    outsideConn = UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and expanded then
+    -- Close dropdown when clicking outside
+    local closeConnection
+    closeConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not isOpen then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             local mousePos = UserInputService:GetMouseLocation()
-            local absPos = frame.AbsolutePosition
-            local absSize = frame.AbsoluteSize
-            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
-                    mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y + list.AbsoluteSize.Y) then
-                closeDropdown()
+            local absPos = dropdown.AbsolutePosition
+            local absSize = dropdown.AbsoluteSize
+            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X 
+                and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
+                isOpen = false
+                dropdown.Visible = false
             end
         end
     end)
+    table.insert(self._connections, closeConnection)
 
     -- Populate options
-    for i, option in ipairs(options) do
+    for _, optionText in ipairs(options) do
         local optBtn = Instance.new("TextButton")
-        optBtn.Size = UDim2.new(1, 0, 0, 28)
+        optBtn.Size = UDim2.new(1, 0, 0, 30)
         optBtn.BackgroundColor3 = colors.Button
-        optBtn.Text = option
+        optBtn.Text = optionText
         optBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         optBtn.Font = Enum.Font.Gotham
         optBtn.TextSize = 14
-        optBtn.TextXAlignment = Enum.TextXAlignment.Left
         optBtn.BorderSizePixel = 0
         optBtn.AutoButtonColor = false
-        optBtn.Parent = list
+        optBtn.Parent = dropdown
 
         local optCorner = Instance.new("UICorner")
         optCorner.CornerRadius = UDim.new(0, 6)
         optCorner.Parent = optBtn
 
-        -- Hover effect
-        optBtn.MouseEnter:Connect(function()
-            optBtn.BackgroundColor3 = colors.Accent
-        end)
-        optBtn.MouseLeave:Connect(function()
-            optBtn.BackgroundColor3 = colors.Button
-        end)
-
         optBtn.MouseButton1Click:Connect(function()
-            selected = option
-            box.Text = selected
-            if callback then callback(option) end
-            closeDropdown()
+            lbl.Text = labelText .. ": " .. optionText
+            dropdown.Visible = false
+            isOpen = false
+            if callback then callback(optionText) end
         end)
     end
+
+    -- Adjust dropdown size automatically
+    local function updateDropdownSize()
+        local totalHeight = 0
+        for _, child in ipairs(dropdown:GetChildren()) do
+            if child:IsA("TextButton") then
+                totalHeight += child.Size.Y.Offset
+            end
+        end
+        dropdown.Size = UDim2.new(0, 260, 0, totalHeight)
+    end
+    updateDropdownSize()
 
     return frame
 end
