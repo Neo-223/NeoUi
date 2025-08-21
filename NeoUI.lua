@@ -51,7 +51,6 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
     corner.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
-
         btn.Text = labelText .. ": Press a key..."
         state.isBindingKey = true
         state.suppressKeyCode = nil
@@ -59,13 +58,10 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
         local beganConn, endedConn
         beganConn = UserInputService.InputBegan:Connect(function(input, gpe)
             if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode ~= Enum.KeyCode.Unknown then
-               
                 onSet(input.KeyCode)
                 btn.Text = labelText .. ": " .. input.KeyCode.Name
-                
                 state.suppressKeyCode = input.KeyCode
 
-                
                 if endedConn then endedConn:Disconnect() end
                 endedConn = UserInputService.InputEnded:Connect(function(endInput, _)
                     if endInput.UserInputType == Enum.UserInputType.Keyboard and endInput.KeyCode == state.suppressKeyCode then
@@ -89,7 +85,6 @@ function Neo:CreateWindow(title: string)
     local window = {}
     setmetatable(window, Neo)
 
-   
     window._state = {
         isBindingKey = false,
         suppressKeyCode = nil,
@@ -97,7 +92,6 @@ function Neo:CreateWindow(title: string)
         unloadKey = Enum.KeyCode.Delete,
     }
 
-   
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NeoModMenu"
     screenGui.ResetOnSpawn = false
@@ -105,7 +99,6 @@ function Neo:CreateWindow(title: string)
     screenGui.Parent = PlayerGui
     window.Gui = screenGui
 
-    
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
     mainFrame.Position = UDim2.new(0.5, -220, 0.5, -200)
@@ -121,7 +114,6 @@ function Neo:CreateWindow(title: string)
     mainCorner.CornerRadius = UDim.new(0, 10)
     mainCorner.Parent = mainFrame
 
-    
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundColor3 = colors.Topbar
@@ -139,7 +131,6 @@ function Neo:CreateWindow(title: string)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
-    
     local sidebar = Instance.new("ScrollingFrame")
     sidebar.Name = "Sidebar"
     sidebar.Size = UDim2.new(0, 150, 1, -40)
@@ -165,7 +156,6 @@ function Neo:CreateWindow(title: string)
     sidebarLayout.Padding = UDim.new(0, 6)
     sidebarLayout.Parent = sidebar
 
-    
     local contentHolder = Instance.new("ScrollingFrame")
     contentHolder.Name = "ContentHolder"
     contentHolder.Size = UDim2.new(1, -150, 1, -40)
@@ -178,20 +168,19 @@ function Neo:CreateWindow(title: string)
     contentHolder.Parent = mainFrame
     window.Content = contentHolder
 
+    -- 🔹 Add global spacing for ALL tabs
     local chPadding = Instance.new("UIPadding")
-    chPadding.PaddingTop = UDim.new(0, 0)      
-    chPadding.PaddingLeft = UDim.new(0, 0)     
-    chPadding.PaddingBottom = UDim.new(0, 4)   
+    chPadding.PaddingTop = UDim.new(0, 10)   -- 10px gap from top bar
+    chPadding.PaddingLeft = UDim.new(0, 0)
+    chPadding.PaddingBottom = UDim.new(0, 4)
     chPadding.Parent = contentHolder
 
-   
     window.Pages = {}
     window._hasDefaultTab = false
     window._tabOrder = 0
     window._settingsCreated = false
     window._connections = {}
 
-    
     function window:Toggle()
         self.MainFrame.Visible = not self.MainFrame.Visible
     end
@@ -202,7 +191,6 @@ function Neo:CreateWindow(title: string)
         if self.Gui then self.Gui:Destroy() end
     end
 
-    
     table.insert(window._connections, UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if window._state.isBindingKey then return end
@@ -262,7 +250,7 @@ function Neo:_createSettingsTab()
     layout.Parent = page
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingTop = UDim.new(0, 10)   -- match global spacing
     padding.PaddingLeft = UDim.new(0, 15)
     padding.Parent = page
 
@@ -289,7 +277,6 @@ function Neo:_createSettingsTab()
 end
 
 function Neo:CreateTab(name: string)
-    
     if string.lower(name) == "settings" then
         warn("[Neo] 'Settings' tab name is reserved by the library. Your tab will be named 'Settings (Custom)'.")
         name = "Settings (Custom)"
@@ -331,7 +318,7 @@ function Neo:CreateTab(name: string)
     layout.Parent = page
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingTop = UDim.new(0, 10)   -- unified spacing
     padding.PaddingLeft = UDim.new(0, 15)
     padding.Parent = page
 
