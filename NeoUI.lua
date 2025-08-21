@@ -506,21 +506,10 @@ function Neo:CreateDropdown(labelText: string, options: {string}, defaultValue: 
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -30, 1, 0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = labelText
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 14
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = frame
-
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 30, 0, 30)
-    btn.Position = UDim2.new(1, -30, 0, 0)
+    btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundColor3 = colors.Button
-    btn.Text = "▼"
+    btn.Text = defaultValue
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 14
@@ -559,8 +548,6 @@ function Neo:CreateDropdown(labelText: string, options: {string}, defaultValue: 
     local function toggleDropdown()
         dropdownOpen = not dropdownOpen
         dropdown.Visible = dropdownOpen
-
-        -- adjust dropdown height
         if dropdownOpen then
             dropdown.Size = UDim2.new(1, 0, 0, #options * 30 + 10)
         else
@@ -588,14 +575,13 @@ function Neo:CreateDropdown(labelText: string, options: {string}, defaultValue: 
 
         optBtn.MouseButton1Click:Connect(function()
             selectedValue = option
-            lbl.Text = labelText .. ": " .. selectedValue
+            btn.Text = selectedValue
             dropdownOpen = false
             dropdown.Visible = false
             if callback then callback(selectedValue) end
         end)
     end
 
-    lbl.Text = labelText .. ": " .. defaultValue
     return frame
 end
 
