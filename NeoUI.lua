@@ -506,66 +506,58 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
-    -- Label
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -40, 1, 0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = labelText
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 16
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = frame
+    local selected = options[1]
 
-    -- Dropdown button
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 30, 0, 30)
-    btn.Position = UDim2.new(1, -35, 0, 0)
-    btn.BackgroundColor3 = colors.Button
-    btn.Text = "▼"
-    btn.BorderSizePixel = 0
-    btn.AutoButtonColor = false
-    btn.Parent = frame
+    -- Dropdown box
+    local box = Instance.new("TextButton")
+    box.Size = UDim2.new(1, 0, 1, 0)
+    box.BackgroundColor3 = colors.Button
+    box.Text = labelText .. ": " .. selected .. " ▼"
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Font = Enum.Font.Gotham
+    box.TextSize = 14
+    box.BorderSizePixel = 0
+    box.AutoButtonColor = false
+    box.Parent = frame
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    corner.Parent = box
 
-    -- Dropdown list
+    -- Dropdown list container
     local list = Instance.new("Frame")
-    list.Size = UDim2.new(0, 265, 0, 0)
+    list.Size = UDim2.new(1, 0, 0, 0)
     list.Position = UDim2.new(0, 0, 1, 2)
     list.BackgroundColor3 = colors.Content
     list.BorderSizePixel = 0
     list.ClipsDescendants = true
     list.Parent = frame
 
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 2)
-    listLayout.Parent = list
+    local layout = Instance.new("UIListLayout")
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 2)
+    layout.Parent = list
 
-    local listPadding = Instance.new("UIPadding")
-    listPadding.PaddingTop = UDim.new(0, 2)
-    listPadding.PaddingBottom = UDim.new(0, 2)
-    listPadding.PaddingLeft = UDim.new(0, 4)
-    listPadding.PaddingRight = UDim.new(0, 4)
-    listPadding.Parent = list
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 2)
+    padding.PaddingBottom = UDim.new(0, 2)
+    padding.PaddingLeft = UDim.new(0, 4)
+    padding.PaddingRight = UDim.new(0, 4)
+    padding.Parent = list
 
     local expanded = false
 
     local function closeDropdown()
-        list:TweenSize(UDim2.new(0, 265, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+        list:TweenSize(UDim2.new(1, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
         expanded = false
     end
 
     local function openDropdown()
-        local listHeight = #options * 30
-        list:TweenSize(UDim2.new(0, 265, 0, listHeight), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+        list:TweenSize(UDim2.new(1, 0, 0, #options * 28), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
         expanded = true
     end
 
-    btn.MouseButton1Click:Connect(function()
+    box.MouseButton1Click:Connect(function()
         if expanded then
             closeDropdown()
         else
@@ -591,7 +583,7 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
     -- Populate options
     for i, option in ipairs(options) do
         local optBtn = Instance.new("TextButton")
-        optBtn.Size = UDim2.new(1, 0, 0, 30)
+        optBtn.Size = UDim2.new(1, 0, 0, 28)
         optBtn.BackgroundColor3 = colors.Button
         optBtn.Text = option
         optBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -605,8 +597,17 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
         optCorner.CornerRadius = UDim.new(0, 6)
         optCorner.Parent = optBtn
 
+        -- Hover effect
+        optBtn.MouseEnter:Connect(function()
+            optBtn.BackgroundColor3 = colors.Accent
+        end)
+        optBtn.MouseLeave:Connect(function()
+            optBtn.BackgroundColor3 = colors.Button
+        end)
+
         optBtn.MouseButton1Click:Connect(function()
-            lbl.Text = labelText .. ": " .. option
+            selected = option
+            box.Text = labelText .. ": " .. selected .. " ▼"
             if callback then callback(option) end
             closeDropdown()
         end)
@@ -614,6 +615,5 @@ function Neo:CreateDropdown(labelText: string, options: {string}, callback: (str
 
     return frame
 end
-
 
 return Neo
