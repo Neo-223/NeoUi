@@ -1,4 +1,4 @@
--- Neo GUI Library (final merged)
+-- Neo GUI Library (with Settings + Rebinds)
 -- Load with: local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/you/repo/main/NeoLib.lua"))()
 
 local Players = game:GetService("Players")
@@ -19,7 +19,9 @@ local colors = {
     Success    = Color3.fromRGB(0, 200, 120),
 }
 
+----------------------------------------------------------------------
 -- Utilities
+----------------------------------------------------------------------
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
@@ -27,6 +29,10 @@ local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
         end
     end
     selectedBtn.BackgroundColor3 = colors.Accent
+end
+
+local function keyToString(input)
+    return input.KeyCode.Name
 end
 
 ----------------------------------------------------------------------
@@ -87,6 +93,12 @@ function Neo:CreateWindow(title: string)
     sidebar.Parent = mainFrame
     window.Sidebar = sidebar
 
+    local sidebarPadding = Instance.new("UIPadding")
+    sidebarPadding.PaddingTop = UDim.new(0, 8)
+    sidebarPadding.PaddingLeft = UDim.new(0, 10)
+    sidebarPadding.PaddingRight = UDim.new(0, 10)
+    sidebarPadding.Parent = sidebar
+
     local sidebarLayout = Instance.new("UIListLayout")
     sidebarLayout.FillDirection = Enum.FillDirection.Vertical
     sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -105,6 +117,11 @@ function Neo:CreateWindow(title: string)
     window.Pages = {}
     window._hasDefaultTab = false
 
+    -- default binds
+    window.ToggleKey = Enum.KeyCode.Insert
+    window.UnloadKey = Enum.KeyCode.Delete
+
+    -- helpers
     function window:Toggle()
         self.MainFrame.Visible = not self.MainFrame.Visible
     end
@@ -112,9 +129,28 @@ function Neo:CreateWindow(title: string)
         if self.Gui then self.Gui:Destroy() end
     end
 
-    -- add permanent settings tab
+    -- Key listener
+    UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if input.KeyCode == window.ToggleKey then
+            window:Toggle()
+        elseif input.KeyCode == window.UnloadKey then
+            window:Destroy()
+        end
+    end)
+
+    -- Create settings tab automatically
     task.defer(function()
-        window:_createSettingsTab()
+        if not window.SettingsTab then
+            local settingsTab = window:CreateTab("Settings", true)
+            settingsTab:CreateRebind("Toggle Menu", window.ToggleKey, function(newKey)
+                window.ToggleKey = newKey
+            end)
+            settingsTab:CreateRebind("Unload Menu", window.UnloadKey, function(newKey)
+                window.UnloadKey = newKey
+            end)
+            window.SettingsTab = settingsTab
+        end
     end)
 
     return window
@@ -123,7 +159,7 @@ end
 ----------------------------------------------------------------------
 -- Tabs
 ----------------------------------------------------------------------
-function Neo:CreateTab(name: string)
+function Neo:CreateTab(name: string, isSettings: boolean?)
     local tab = {}
     setmetatable(tab, Neo)
 
@@ -138,11 +174,15 @@ function Neo:CreateTab(name: string)
     btn.Text = name
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
-    btn.Parent = self.Sidebar
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
+
+    if isSettings then
+        btn.LayoutOrder = 99999 -- always bottom
+    end
+    btn.Parent = self.Sidebar
 
     -- Page
     local page = Instance.new("Frame")
@@ -173,10 +213,9 @@ function Neo:CreateTab(name: string)
         page.Visible = true
         highlightTab(self.Sidebar, btn)
     end
-
     btn.MouseButton1Click:Connect(selectThis)
 
-    if not self._hasDefaultTab then
+    if not self._hasDefaultTab and not isSettings then
         self._hasDefaultTab = true
         selectThis()
     end
@@ -253,17 +292,12 @@ function Neo:CreateToggle(text: string, callback: (boolean)->())
     corner.Parent = box
 
     local state = false
-    local function update()
-        box.BackgroundColor3 = state and colors.Success or colors.Button
-        if callback then callback(state) end
-    end
-
     box.MouseButton1Click:Connect(function()
         state = not state
-        update()
+        box.BackgroundColor3 = state and colors.Success or colors.Button
+        if callback then callback(state) end
     end)
 
-    update()
     return frame
 end
 
@@ -346,53 +380,42 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
-----------------------------------------------------------------------
--- Settings Tab Injection
-----------------------------------------------------------------------
-function Neo:_createSettingsTab()
-    local settingsTab = self:CreateTab("Settings")
+-- Key rebind component
+function Neo:CreateRebind(text: string, defaultKey: Enum.KeyCode, callback: (Enum.KeyCode)->())
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 260, 0, 30)
+    btn.BackgroundColor3 = colors.Button
+    btn.Text = text .. ": [" .. defaultKey.Name .. "]"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Parent = self.Page
 
-    -- default keybinds
-    local toggleKey = Enum.KeyCode.Insert
-    local unloadKey = Enum.KeyCode.Delete
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
-    local function rebind(label, currentKey, onSet)
-        local btn = settingsTab:CreateButton(label .. ": " .. currentKey.Name, function()
-            btn.Text = label .. ": ..."
-            local conn
-            conn = UserInputService.InputBegan:Connect(function(input, gpe)
-                if not gpe and input.UserInputType == Enum.UserInputType.Keyboard then
-                    currentKey = input.KeyCode
-                    btn.Text = label .. ": " .. currentKey.Name
-                    if onSet then onSet(currentKey) end
-                    conn:Disconnect()
-                end
-            end)
-        end)
-        return btn
-    end
-
-    rebind("Toggle Menu", toggleKey, function(newKey)
-        toggleKey = newKey
-    end)
-    rebind("Unload Menu", unloadKey, function(newKey)
-        unloadKey = newKey
-    end)
-
-    settingsTab:CreateButton("Unload Now", function()
-        self:Destroy()
-    end)
-
-    UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe then return end
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            if input.KeyCode == toggleKey then
-                self:Toggle()
-            elseif input.KeyCode == unloadKey then
-                self:Destroy()
+    local waiting = false
+    btn.MouseButton1Click:Connect(function()
+        if waiting then return end
+        waiting = true
+        btn.Text = text .. ": [Press a key...]"
+        local conn
+        conn = UserInputService.InputBegan:Connect(function(input, gpe)
+            if gpe then return end
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                local newKey = input.KeyCode
+                btn.Text = text .. ": [" .. newKey.Name .. "]"
+                if callback then callback(newKey) end
+                waiting = false
+                conn:Disconnect()
             end
-        end
+        end)
     end)
+
+    return btn
 end
 
 return Neo
