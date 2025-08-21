@@ -528,7 +528,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     dropBtn.AutoButtonColor = false
     dropBtn.Parent = frame
 
-    -- Rounded corners for main button
+    -- Rounded top corners for main button
     local dropCorner = Instance.new("UICorner")
     dropCorner.CornerRadius = UDim.new(0, 6)
     dropCorner.Parent = dropBtn
@@ -568,7 +568,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         optBtn.AutoButtonColor = false
         optBtn.Parent = listFrame
 
-        -- Round only outer edges
+        -- Outer edges rounded for first and last option
         if i == 1 then
             local topCorner = Instance.new("UICorner")
             topCorner.CornerRadius = UDim.new(0, 6)
@@ -597,13 +597,13 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         listFrame.Visible = not listFrame.Visible
         if listFrame.Visible then
             listFrame.Size = UDim2.new(1, 0, 0, #options * 25)
-            dropCorner.CornerRadius = UDim.new(0, 6) -- keep top rounded visually
+            dropCorner.CornerRadius = UDim.new(0, 6) -- keep top rounded for seamless look
         else
             closeDropdown()
         end
     end)
 
-    -- Close dropdown when clicking outside
+    -- Outside click closes dropdown
     local UIS = game:GetService("UserInputService")
     table.insert(self._connections, UIS.InputBegan:Connect(function(input, gpe)
         if gpe then return end
