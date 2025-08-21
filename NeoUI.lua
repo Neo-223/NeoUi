@@ -517,9 +517,9 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = frame
 
-    -- Main dropdown button (always rounded)
+    -- Main button (always rounded)
     local dropBtn = Instance.new("TextButton")
-    dropBtn.Size = UDim2.new(1, 0, 0, 25)
+    dropBtn.Size = UDim2.new(1, 0, 0, 30)
     dropBtn.Position = UDim2.new(0, 0, 0, 22)
     dropBtn.BackgroundColor3 = colors.Button
     dropBtn.Text = default or (options[1] or "Select...")
@@ -531,31 +531,33 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     dropBtn.Parent = frame
 
     local dropCorner = Instance.new("UICorner")
-    dropCorner.CornerRadius = UDim.new(0, 12)
+    dropCorner.CornerRadius = UDim.new(0, 6)
     dropCorner.Parent = dropBtn
 
-    -- Large dropdown background
+    self._connections = self._connections or {}
+
+    -- Dropdown container (single rounded rectangle)
     local listFrame = Instance.new("Frame")
     listFrame.Size = UDim2.new(1, 0, 0, 0)
-    listFrame.Position = UDim2.new(0, 0, 0, dropBtn.Position.Y.Offset + dropBtn.Size.Y.Offset)
-    listFrame.BackgroundColor3 = colors.Content
+    listFrame.Position = UDim2.new(0, 0, 0, dropBtn.Position.Y.Offset + dropBtn.Size.Y.Offset + 5)
+    listFrame.BackgroundColor3 = colors.Button
     listFrame.BorderSizePixel = 0
     listFrame.Visible = false
     listFrame.ClipsDescendants = true
     listFrame.Parent = frame
 
     local listCorner = Instance.new("UICorner")
-    listCorner.CornerRadius = UDim.new(0, 12)
+    listCorner.CornerRadius = UDim.new(0, 6)
     listCorner.Parent = listFrame
 
-    -- Options container
+    -- Options layout
     local listLayout = Instance.new("UIListLayout")
     listLayout.FillDirection = Enum.FillDirection.Vertical
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Padding = UDim.new(0, 0)
     listLayout.Parent = listFrame
 
-    for i, opt in ipairs(options) do
+    for _, opt in ipairs(options) do
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, 0, 0, 30)
         optBtn.BackgroundTransparency = 1
@@ -594,7 +596,6 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
 
     -- Close dropdown when clicking outside
     local UIS = game:GetService("UserInputService")
-    self._connections = self._connections or {}
     table.insert(self._connections, UIS.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if listFrame.Visible and input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -613,5 +614,6 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
 
     return frame
 end
+
 
 return Neo
