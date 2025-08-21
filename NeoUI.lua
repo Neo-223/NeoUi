@@ -262,7 +262,7 @@ function Neo:_createSettingsTab()
     layout.Parent = page
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 15)
+    padding.PaddingTop = UDim.new(0, 25)
     padding.PaddingLeft = UDim.new(0, 15)
     padding.Parent = page
 
@@ -278,16 +278,6 @@ function Neo:_createSettingsTab()
     end
 
     btn.MouseButton1Click:Connect(selectThis)
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -20, 0, 25)
-    label.BackgroundTransparency = 1
-    label.Text = "Keybinds"
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 18
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = page
 
     createRebindRow(page, "Toggle Menu", self._state.toggleKey, function(newKey)
         self._state.toggleKey = newKey
@@ -341,7 +331,7 @@ function Neo:CreateTab(name: string)
     layout.Parent = page
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 15)
+    padding.PaddingTop = UDim.new(0, 25)
     padding.PaddingLeft = UDim.new(0, 15)
     padding.Parent = page
 
