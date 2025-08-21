@@ -506,6 +506,7 @@ function Neo:CreateDropdown(labelText: string, options: {string}, defaultValue: 
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
+    -- Button styled like your CreateButton
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundColor3 = colors.Button
@@ -517,10 +518,14 @@ function Neo:CreateDropdown(labelText: string, options: {string}, defaultValue: 
     btn.AutoButtonColor = false
     btn.Parent = frame
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
 
+    local selectedValue = defaultValue
+    local dropdownOpen = false
+
+    -- Dropdown frame (content area)
     local dropdown = Instance.new("Frame")
     dropdown.Size = UDim2.new(1, 0, 0, 0)
     dropdown.Position = UDim2.new(0, 0, 1, 2)
@@ -542,9 +547,7 @@ function Neo:CreateDropdown(labelText: string, options: {string}, defaultValue: 
     padding.PaddingRight = UDim.new(0, 5)
     padding.Parent = dropdown
 
-    local selectedValue = defaultValue
-    local dropdownOpen = false
-
+    -- Toggle dropdown visibility
     local function toggleDropdown()
         dropdownOpen = not dropdownOpen
         dropdown.Visible = dropdownOpen
@@ -557,6 +560,7 @@ function Neo:CreateDropdown(labelText: string, options: {string}, defaultValue: 
 
     btn.MouseButton1Click:Connect(toggleDropdown)
 
+    -- Create each option button
     for _, option in ipairs(options) do
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, 0, 0, 30)
