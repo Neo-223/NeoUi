@@ -251,7 +251,7 @@ function Neo:CreateTab(name: string, isSettings: boolean?)
 
     -- ✅ Dynamic canvas resize with 2px gap at bottom
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 2)
+        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 4
     end)
 
     self.Pages[name] = page
