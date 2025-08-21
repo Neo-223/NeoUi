@@ -528,7 +528,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     dropBtn.AutoButtonColor = false
     dropBtn.Parent = frame
 
-    -- Rounded only for main button
+    -- Full rounded corners for closed button
     local dropCorner = Instance.new("UICorner")
     dropCorner.CornerRadius = UDim.new(0, 6)
     dropCorner.Parent = dropBtn
@@ -554,6 +554,8 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
     local function closeDropdown()
         listFrame.Visible = false
         listFrame.Size = UDim2.new(1, 0, 0, 0)
+        -- Restore full button rounding
+        dropCorner.CornerRadius = UDim.new(0, 6)
     end
 
     for i, opt in ipairs(options) do
@@ -568,7 +570,7 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         optBtn.AutoButtonColor = false
         optBtn.Parent = listFrame
 
-        -- Only round last option
+        -- Round only the last option
         if i == #options then
             local lastCorner = Instance.new("UICorner")
             lastCorner.CornerRadius = UDim.new(0, 6)
@@ -593,6 +595,8 @@ function Neo:CreateDropdown(text: string, options: {string}, default: string?, c
         listFrame.Visible = not listFrame.Visible
         if listFrame.Visible then
             listFrame.Size = UDim2.new(1, 0, 0, #options * 25)
+            -- Remove bottom rounding while dropdown is open
+            dropCorner.CornerRadius = UDim.new(0, 6) -- top still rounded visually if needed
         else
             closeDropdown()
         end
