@@ -506,10 +506,12 @@ function Neo:CreateDropdown(text: string, options: {string}, callback: (string) 
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
+    local default = options[1] or "None"
+
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 1, 0)
     button.BackgroundColor3 = colors.Button
-    button.Text = text .. " ▼"
+    button.Text = default .. " ▼"
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.Font = Enum.Font.Gotham
     button.TextSize = 14
@@ -562,14 +564,15 @@ function Neo:CreateDropdown(text: string, options: {string}, callback: (string) 
         opt.MouseButton1Click:Connect(function()
             button.Text = option .. " ▼"
             listFrame.Visible = false
+            isOpen = false
             if callback then callback(option) end
         end)
     end
 
     -- Expand height if more than 3 options
-    listFrame:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    uiList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         local contentHeight = uiList.AbsoluteContentSize.Y + uiPadding.PaddingTop.Offset + uiPadding.PaddingBottom.Offset
-        listFrame.Size = UDim2.new(1, 0, 0, math.min(contentHeight, 100)) -- ~3-4 items visible
+        listFrame.Size = UDim2.new(1, 0, 0, math.min(contentHeight, 100)) -- scroll if > ~3 items
     end)
 
     local isOpen = false
@@ -579,15 +582,15 @@ function Neo:CreateDropdown(text: string, options: {string}, callback: (string) 
     end)
 
     -- Collapse when clicking outside
-    local connection
-    connection = UserInputService.InputBegan:Connect(function(input, gpe)
+    UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if isOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
             local mousePos = input.Position
-            if not (mousePos.X >= listFrame.AbsolutePosition.X and mousePos.X <= listFrame.AbsolutePosition.X + listFrame.AbsoluteSize.X
-                and mousePos.Y >= listFrame.AbsolutePosition.Y and mousePos.Y <= listFrame.AbsolutePosition.Y + listFrame.AbsoluteSize.Y
-                and mousePos.X >= button.AbsolutePosition.X and mousePos.X <= button.AbsolutePosition.X + button.AbsoluteSize.X
-                and mousePos.Y >= button.AbsolutePosition.Y and mousePos.Y <= button.AbsolutePosition.Y + button.AbsoluteSize.Y) then
+            local insideButton = mousePos.X >= button.AbsolutePosition.X and mousePos.X <= button.AbsolutePosition.X + button.AbsoluteSize.X
+                              and mousePos.Y >= button.AbsolutePosition.Y and mousePos.Y <= button.AbsolutePosition.Y + button.AbsoluteSize.Y
+            local insideList = mousePos.X >= listFrame.AbsolutePosition.X and mousePos.X <= listFrame.AbsolutePosition.X + listFrame.AbsoluteSize.X
+                             and mousePos.Y >= listFrame.AbsolutePosition.Y and mousePos.Y <= listFrame.AbsolutePosition.Y + listFrame.AbsoluteSize.Y
+            if not insideButton and not insideList then
                 isOpen = false
                 listFrame.Visible = false
             end
