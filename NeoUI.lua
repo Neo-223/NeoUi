@@ -1,20 +1,19 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local Neo = {}
 Neo.__index = Neo
 
 -- Color palette
 local colors = {
-    Background = Color3.fromRGB(18, 18, 22),   -- main background
-    Sidebar    = Color3.fromRGB(28, 28, 34),   -- sidebar
-    Content    = Color3.fromRGB(24, 24, 30),   -- content area
-    Button     = Color3.fromRGB(45, 45, 55),   -- buttons
-    Topbar     = Color3.fromRGB(30, 30, 38),   -- top bar
-    Accent     = Color3.fromRGB(0, 170, 255),  -- bright cyan/blue
-    Success    = Color3.fromRGB(0, 200, 120),  -- green toggle on
+    Background = Color3.fromRGB(18, 18, 22),
+    Sidebar    = Color3.fromRGB(28, 28, 34),
+    Content    = Color3.fromRGB(24, 24, 30),
+    Button     = Color3.fromRGB(45, 45, 55),
+    Topbar     = Color3.fromRGB(30, 30, 38),
+    Accent     = Color3.fromRGB(0, 170, 255),
+    Success    = Color3.fromRGB(0, 200, 120),
 }
 
 ----------------------------------------------------------------------
@@ -92,11 +91,13 @@ function Neo:CreateWindow(title: string)
         unloadKey = Enum.KeyCode.Delete,
     }
 
+    -- Exploit-level parenting to CoreGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NeoModMenu"
     screenGui.ResetOnSpawn = false
+    screenGui.IgnoreGuiInset = true
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.Parent = PlayerGui
+    screenGui.Parent = game:GetService("CoreGui")
     window.Gui = screenGui
 
     local mainFrame = Instance.new("Frame")
@@ -168,9 +169,8 @@ function Neo:CreateWindow(title: string)
     contentHolder.Parent = mainFrame
     window.Content = contentHolder
 
-    -- 🔹 Add global spacing for ALL tabs
     local chPadding = Instance.new("UIPadding")
-    chPadding.PaddingTop = UDim.new(0, 10)   -- 10px gap from top bar
+    chPadding.PaddingTop = UDim.new(0, 10)
     chPadding.PaddingLeft = UDim.new(0, 0)
     chPadding.PaddingBottom = UDim.new(0, 4)
     chPadding.Parent = contentHolder
@@ -184,6 +184,7 @@ function Neo:CreateWindow(title: string)
     function window:Toggle()
         self.MainFrame.Visible = not self.MainFrame.Visible
     end
+
     function window:Destroy()
         for _, c in ipairs(self._connections) do
             pcall(function() c:Disconnect() end)
