@@ -37,7 +37,7 @@ CreateSlider(text: string, min: number, max: number, defaultValue: number, callb
 ```
 ## Example
 ```
-local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/Neo-223/NeoUi/refs/heads/main/NeoUI.lua"))()
+local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/Neo-223/NeoUi/refs/heads/main/Neo.lua"))()
 
 local window = Neo:CreateWindow("NeoUI")
 
