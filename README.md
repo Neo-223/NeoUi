@@ -5,7 +5,7 @@ A clean, modern Roblox UI library with:
 - Buttons, toggles, sliders, and labels
 - Keybinds (with rebinding support)
 - Built-in **Settings tab** (with Toggle Menu + Unload Menu binds)
-- Automatic scrolling for overflowing content and sidebar tabs
+- Scrolling for overflowing content and sidebar tabs
 
 ---
 
@@ -14,7 +14,7 @@ A clean, modern Roblox UI library with:
 Load the library in your script:
 
 ```lua
-local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/Neo-223/NeoUi/main/NeoUI.lua"))()
+local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/Neo-223/NeoUi/main/Neo.lua"))()
 ```
 
 ## Components
