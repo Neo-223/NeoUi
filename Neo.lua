@@ -16,9 +16,9 @@ local colors = {
     Success    = Color3.fromRGB(0, 200, 120),
 }
 
-----------------------------------------------------------------------
+---------------------------------------------------------------------- 
 -- Helpers
-----------------------------------------------------------------------
+---------------------------------------------------------------------- 
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
@@ -77,9 +77,9 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
     return row
 end
 
-----------------------------------------------------------------------
+---------------------------------------------------------------------- 
 -- Window
-----------------------------------------------------------------------
+---------------------------------------------------------------------- 
 function Neo:CreateWindow(title: string)
     local window = {}
     setmetatable(window, Neo)
@@ -209,9 +209,9 @@ function Neo:CreateWindow(title: string)
     return window
 end
 
-----------------------------------------------------------------------
+---------------------------------------------------------------------- 
 -- Tabs
-----------------------------------------------------------------------
+---------------------------------------------------------------------- 
 function Neo:_createSettingsTab()
     if self._settingsCreated then return end
     self._settingsCreated = true
@@ -251,7 +251,7 @@ function Neo:_createSettingsTab()
     layout.Parent = page
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 10)   -- match global spacing
+    padding.PaddingTop = UDim.new(0, 10)
     padding.PaddingLeft = UDim.new(0, 15)
     padding.Parent = page
 
@@ -319,7 +319,7 @@ function Neo:CreateTab(name: string)
     layout.Parent = page
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 10)   -- unified spacing
+    padding.PaddingTop = UDim.new(0, 10)
     padding.PaddingLeft = UDim.new(0, 15)
     padding.Parent = page
 
@@ -344,9 +344,9 @@ function Neo:CreateTab(name: string)
     return tab
 end
 
-----------------------------------------------------------------------
+---------------------------------------------------------------------- 
 -- Components
-----------------------------------------------------------------------
+---------------------------------------------------------------------- 
 function Neo:CreateLabel(text: string)
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -20, 0, 25)
@@ -358,6 +358,15 @@ function Neo:CreateLabel(text: string)
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = self.Page
     return lbl
+end
+
+-- NEW: Update label text
+function Neo:UpdateLabelText(label: TextLabel, newText: string)
+    if label and label:IsA("TextLabel") then
+        label.Text = newText
+    else
+        warn("[Neo] Tried to update label text on invalid object.")
+    end
 end
 
 function Neo:CreateButton(text: string, callback: ()->())
@@ -457,44 +466,38 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.Parent = frame
 
     local fill = Instance.new("Frame")
-    local startAlpha = (defaultValue - min) / math.max(1, (max - min))
-    fill.Size = UDim2.new(math.clamp(startAlpha, 0, 1), 0, 1, 0)
+    local startAlpha = (defaultValue - min) / (max - min)
+    fill.Size = UDim2.new(startAlpha, 0, 1, 0)
     fill.BackgroundColor3 = colors.Accent
     fill.BorderSizePixel = 0
     fill.Parent = bar
 
     local dragging = false
-    local function setFromAlpha(alpha: number)
-        alpha = math.clamp(alpha, 0, 1)
-        fill.Size = UDim2.new(alpha, 0, 1, 0)
-        local value = math.floor(min + (max - min) * alpha + 0.5)
+    local function update(input)
+        local rel = input.Position.X - bar.AbsolutePosition.X
+        local pct = math.clamp(rel / bar.AbsoluteSize.X, 0, 1)
+        fill.Size = UDim2.new(pct, 0, 1, 0)
+        local value = math.floor(min + (max - min) * pct)
         valLbl.Text = tostring(value)
         if callback then callback(value) end
-    end
-
-    local function updateFromMouse(px: number)
-        local relX = (px - bar.AbsolutePosition.X) / bar.AbsoluteSize.X
-        setFromAlpha(relX)
     end
 
     bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            if self._mainFrame then self._mainFrame.Active = false end
-            updateFromMouse(input.Position.X)
+            update(input)
+        end
+    end)
+
+    bar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
         end
     end)
 
     UserInputService.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            updateFromMouse(input.Position.X)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
-            dragging = false
-            if self._mainFrame then self._mainFrame.Active = true end
+            update(input)
         end
     end)
 
@@ -502,3 +505,4 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
 end
 
 return Neo
+
