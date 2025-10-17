@@ -43,7 +43,7 @@ local window = Neo:CreateWindow("NeoUI")
 
 local tab = window:CreateTab("Example")
 
-local exampleLabel = myTab:CreateLabel("This is a Label") 
+local exampleLabel = tab:CreateLabel("This is a Label") 
 
 Neo:UpdateLabelText(exampleLabel , "I changed the label text")
 
