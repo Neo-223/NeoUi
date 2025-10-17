@@ -43,8 +43,9 @@ local window = Neo:CreateWindow("NeoUI")
 
 local tab = window:CreateTab("Example")
 
+local exampleLabel = myTab:CreateLabel("This is a Label") 
 
-tab:CreateLabel("This is a label.")
+Neo:UpdateLabelText(exampleLabel , "I changed the label text")
 
 tab:CreateButton("Click Me", function()
     print("Button clicked!")
