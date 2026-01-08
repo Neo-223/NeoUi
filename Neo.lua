@@ -360,7 +360,6 @@ function Neo:CreateLabel(text: string)
     return lbl
 end
 
--- NEW: Update label text
 function Neo:UpdateLabelText(label: TextLabel, newText: string)
     if label and label:IsA("TextLabel") then
         label.Text = newText
@@ -473,6 +472,8 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     fill.Parent = bar
 
     local dragging = false
+    local mainFrame = self._mainFrame  -- reference to the main draggable frame
+
     local function update(input)
         local rel = input.Position.X - bar.AbsolutePosition.X
         local pct = math.clamp(rel / bar.AbsoluteSize.X, 0, 1)
@@ -485,6 +486,10 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
+            if mainFrame then
+                mainFrame.Active = false
+                mainFrame.Draggable = false
+            end
             update(input)
         end
     end)
@@ -492,6 +497,10 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
+            if mainFrame then
+                mainFrame.Active = true
+                mainFrame.Draggable = true
+            end
         end
     end)
 
@@ -504,5 +513,5 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
+---------------------------------------------------------------------- 
 return Neo
-
