@@ -468,7 +468,7 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     local startAlpha = (defaultValue - min) / (max - min)
     fill.Size = UDim2.new(startAlpha, 0, 1, 0)
     fill.BackgroundColor3 = colors.Accent
-    fill.BorderSizePixel = 0
+        fill.BorderSizePixel = 0
     fill.Parent = bar
 
     local dragging = false
@@ -514,4 +514,105 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
 end
 
 ---------------------------------------------------------------------- 
+-- Dropdown Component
+---------------------------------------------------------------------- 
+function Neo:CreateDropdown(text: string, options: {string}, defaultOption: string, callback: (string) -> ())
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 260, 0, 30)
+    frame.BackgroundTransparency = 1
+    frame.Parent = self.Page
+
+    -- Label
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -10, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = frame
+
+    -- Dropdown Button
+    local box = Instance.new("TextButton")
+    box.Size = UDim2.new(0, 120, 1, 0)
+    box.Position = UDim2.new(1, -125, 0, 0)
+    box.BackgroundColor3 = colors.Button
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Text = defaultOption or options[1] or ""
+    box.Font = Enum.Font.Gotham
+    box.TextSize = 14
+    box.BorderSizePixel = 0
+    box.AutoButtonColor = false
+    box.Parent = frame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = box
+
+    -- Dropdown list frame
+    local list = Instance.new("Frame")
+    list.Size = UDim2.new(0, 120, 0, 0)
+    list.Position = UDim2.new(0, 0, 1, 0)
+    list.BackgroundColor3 = colors.Button
+    list.BorderSizePixel = 0
+    list.ClipsDescendants = true
+    list.Visible = false
+    list.Parent = frame
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = list
+
+    local listPadding = Instance.new("UIPadding")
+    listPadding.PaddingTop = UDim.new(0, 4)
+    listPadding.PaddingBottom = UDim.new(0, 4)
+    listPadding.PaddingLeft = UDim.new(0, 4)
+    listPadding.PaddingRight = UDim.new(0, 4)
+    listPadding.Parent = list
+
+    -- Populate options
+    for i, option in ipairs(options) do
+        local optBtn = Instance.new("TextButton")
+        optBtn.Size = UDim2.new(1, 0, 0, 25)
+        optBtn.BackgroundColor3 = colors.Sidebar
+        optBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        optBtn.Text = option
+        optBtn.Font = Enum.Font.Gotham
+        optBtn.TextSize = 14
+        optBtn.BorderSizePixel = 0
+        optBtn.AutoButtonColor = false
+        optBtn.Parent = list
+
+        local optCorner = Instance.new("UICorner")
+        optCorner.CornerRadius = UDim.new(0, 6)
+        optCorner.Parent = optBtn
+
+        optBtn.MouseButton1Click:Connect(function()
+            box.Text = option
+            list.Visible = false
+            if callback then callback(option) end
+        end)
+
+        -- Hover effect
+        optBtn.MouseEnter:Connect(function()
+            optBtn.BackgroundColor3 = colors.Accent
+        end)
+        optBtn.MouseLeave:Connect(function()
+            optBtn.BackgroundColor3 = colors.Sidebar
+        end)
+    end
+
+    local expanded = false
+    box.MouseButton1Click:Connect(function()
+        expanded = not expanded
+        list.Visible = expanded
+        list.Size = UDim2.new(0, 120, 0, #options * 25 + 8) -- 25px per option + padding
+    end)
+
+    return frame
+end
+
+---------------------------------------------------------------------- 
 return Neo
+
