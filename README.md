@@ -35,6 +35,10 @@ Creates a slider with a value label.
 ```
 CreateSlider(text: string, min: number, max: number, defaultValue: number, callback: (number) -> ())
 ```
+Creates a Dropdown.
+```
+tab:CreateDropdown(options: table, defaultOption: string, callback: (selected: string) -> ())
+```
 ## Example
 ```
 local Neo = loadstring(game:HttpGet("https://raw.githubusercontent.com/Neo-223/NeoUi/refs/heads/main/Neo.lua"))()
@@ -57,5 +61,9 @@ end)
 
 tab:CreateSlider("Slider", 0, 100, 50, function(value)
     print("Slider value:", value)
+end)
+
+tab:CreateDropdown({"Option 1", "Option 2", "Option 3"}, "Option 1", function(selected)
+    print("Selected:", selected)
 end)
 ```
