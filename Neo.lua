@@ -516,27 +516,15 @@ end
 ---------------------------------------------------------------------- 
 -- Dropdown Component
 ---------------------------------------------------------------------- 
-function Neo:CreateDropdown(text: string, options: {string}, defaultOption: string, callback: (string) -> ())
+function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: (string) -> ())
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 260, 0, 30)
     frame.BackgroundTransparency = 1
     frame.Parent = self.Page
 
-    -- Label
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -10, 1, 0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 14
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = frame
-
-    -- Dropdown Button
+    -- Dropdown Button (fills full width)
     local box = Instance.new("TextButton")
-    box.Size = UDim2.new(0, 120, 1, 0)
-    box.Position = UDim2.new(1, -125, 0, 0)
+    box.Size = UDim2.new(1, 0, 1, 0) -- full width
     box.BackgroundColor3 = colors.Button
     box.TextColor3 = Color3.fromRGB(255, 255, 255)
     box.Text = defaultOption or options[1] or ""
@@ -552,7 +540,7 @@ function Neo:CreateDropdown(text: string, options: {string}, defaultOption: stri
 
     -- Dropdown list frame
     local list = Instance.new("Frame")
-    list.Size = UDim2.new(0, 120, 0, 0)
+    list.Size = UDim2.new(1, 0, 0, 0)
     list.Position = UDim2.new(0, 0, 1, 0)
     list.BackgroundColor3 = colors.Button
     list.BorderSizePixel = 0
@@ -607,11 +595,12 @@ function Neo:CreateDropdown(text: string, options: {string}, defaultOption: stri
     box.MouseButton1Click:Connect(function()
         expanded = not expanded
         list.Visible = expanded
-        list.Size = UDim2.new(0, 120, 0, #options * 25 + 8) -- 25px per option + padding
+        list.Size = UDim2.new(1, 0, 0, #options * 25 + 8) -- 25px per option + padding
     end)
 
     return frame
 end
+
 
 ---------------------------------------------------------------------- 
 return Neo
