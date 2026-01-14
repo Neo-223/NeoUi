@@ -5,7 +5,6 @@ local LocalPlayer = Players.LocalPlayer
 local Neo = {}
 Neo.__index = Neo
 
--- Color palette
 local colors = {
     Background = Color3.fromRGB(18, 18, 22),
     Sidebar    = Color3.fromRGB(28, 28, 34),
@@ -91,12 +90,10 @@ function Neo:CreateWindow(title: string)
         unloadKey = Enum.KeyCode.Delete,
     }
 
-    -- Exploit-level parenting to CoreGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NeoModMenu"
     screenGui.ResetOnSpawn = false
     screenGui.IgnoreGuiInset = true
-    -- Use global ZIndex so dropdowns and overlays can reliably appear above other components
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     screenGui.Parent = game:GetService("CoreGui")
     window.Gui = screenGui
@@ -473,7 +470,7 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     fill.Parent = bar
 
     local dragging = false
-    local mainFrame = self._mainFrame  -- reference to the main draggable frame
+    local mainFrame = self._mainFrame
 
     local function update(input)
         local rel = input.Position.X - bar.AbsolutePosition.X
@@ -524,9 +521,8 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     frame.ZIndex = 10
     frame.Parent = self.Page
 
-    -- Dropdown Button (fills full width)
     local box = Instance.new("TextButton")
-    box.Size = UDim2.new(1, 0, 1, 0) -- full width
+    box.Size = UDim2.new(1, 0, 1, 0)
     box.BackgroundColor3 = colors.Button
     box.TextColor3 = Color3.fromRGB(255, 255, 255)
     box.Text = defaultOption or options[1] or ""
@@ -541,10 +537,9 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = box
 
-    -- Dropdown list frame
     local list = Instance.new("Frame")
     list.Size = UDim2.new(1, 0, 0, 0)
-    list.Position = UDim2.new(0, 0, 1, 0)
+    list.Position = UDim2.new(0, 0, 0, 30)
     list.BackgroundColor3 = colors.Button
     list.BorderSizePixel = 0
     list.ClipsDescendants = true
@@ -563,7 +558,6 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     listPadding.PaddingRight = UDim.new(0, 4)
     listPadding.Parent = list
 
-    -- Populate options
     for i, option in ipairs(options) do
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, 0, 0, 25)
@@ -587,7 +581,6 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
             if callback then callback(option) end
         end)
 
-        -- Hover effect
         optBtn.MouseEnter:Connect(function()
             optBtn.BackgroundColor3 = colors.Accent
         end)
@@ -600,7 +593,14 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     box.MouseButton1Click:Connect(function()
         expanded = not expanded
         list.Visible = expanded
-        list.Size = UDim2.new(1, 0, 0, #options * 25 + 8) -- 25px per option + padding
+        local listHeight = #options * 25 + 8
+        if expanded then
+            list.Size = UDim2.new(1, 0, 0, listHeight)
+            frame.Size = UDim2.new(0, 260, 0, 30 + listHeight)
+        else
+            list.Size = UDim2.new(1, 0, 0, 0)
+            frame.Size = UDim2.new(0, 260, 0, 30)
+        end
     end)
 
     return frame
