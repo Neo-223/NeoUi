@@ -552,7 +552,8 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     listLayout.Parent = list
 
     local listPadding = Instance.new("UIPadding")
-    listPadding.PaddingTop = UDim.new(0, 4)
+    -- Remove extra top gap so options sit flush against the main dropdown box
+    listPadding.PaddingTop = UDim.new(0, 0)
     listPadding.PaddingBottom = UDim.new(0, 4)
     listPadding.PaddingLeft = UDim.new(0, 4)
     listPadding.PaddingRight = UDim.new(0, 4)
@@ -577,7 +578,13 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
 
         optBtn.MouseButton1Click:Connect(function()
             box.Text = option
+
+            -- Collapse dropdown after selecting an option
+            expanded = false
             list.Visible = false
+            list.Size = UDim2.new(1, 0, 0, 0)
+            frame.Size = UDim2.new(0, 260, 0, 30)
+
             if callback then callback(option) end
         end)
 
