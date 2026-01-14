@@ -559,6 +559,26 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     listPadding.PaddingRight = UDim.new(0, 4)
     listPadding.Parent = list
 
+    local expanded = false
+
+    local function setExpanded(state: boolean)
+        expanded = state
+        list.Visible = state
+
+        if state then
+            -- Use the actual content size so the dropdown height matches the options
+            local contentHeight = listLayout.AbsoluteContentSize.Y
+            local padTop = listPadding.PaddingTop.Offset
+            local padBottom = listPadding.PaddingBottom.Offset
+            local listHeight = contentHeight + padTop + padBottom
+            list.Size = UDim2.new(1, 0, 0, listHeight)
+            frame.Size = UDim2.new(0, 260, 0, 30 + listHeight)
+        else
+            list.Size = UDim2.new(1, 0, 0, 0)
+            frame.Size = UDim2.new(0, 260, 0, 30)
+        end
+    end
+
     for i, option in ipairs(options) do
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, 0, 0, 25)
@@ -578,13 +598,7 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
 
         optBtn.MouseButton1Click:Connect(function()
             box.Text = option
-
-            -- Collapse dropdown after selecting an option
-            expanded = false
-            list.Visible = false
-            list.Size = UDim2.new(1, 0, 0, 0)
-            frame.Size = UDim2.new(0, 260, 0, 30)
-
+            setExpanded(false)
             if callback then callback(option) end
         end)
 
@@ -596,18 +610,8 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
         end)
     end
 
-    local expanded = false
     box.MouseButton1Click:Connect(function()
-        expanded = not expanded
-        list.Visible = expanded
-        local listHeight = #options * 25 + 8
-        if expanded then
-            list.Size = UDim2.new(1, 0, 0, listHeight)
-            frame.Size = UDim2.new(0, 260, 0, 30 + listHeight)
-        else
-            list.Size = UDim2.new(1, 0, 0, 0)
-            frame.Size = UDim2.new(0, 260, 0, 30)
-        end
+        setExpanded(not expanded)
     end)
 
     return frame
