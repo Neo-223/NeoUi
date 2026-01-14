@@ -96,7 +96,8 @@ function Neo:CreateWindow(title: string)
     screenGui.Name = "NeoModMenu"
     screenGui.ResetOnSpawn = false
     screenGui.IgnoreGuiInset = true
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    -- Use global ZIndex so dropdowns and overlays can reliably appear above other components
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     screenGui.Parent = game:GetService("CoreGui")
     window.Gui = screenGui
 
@@ -520,6 +521,7 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 260, 0, 30)
     frame.BackgroundTransparency = 1
+    frame.ZIndex = 10
     frame.Parent = self.Page
 
     -- Dropdown Button (fills full width)
@@ -532,6 +534,7 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     box.TextSize = 14
     box.BorderSizePixel = 0
     box.AutoButtonColor = false
+    box.ZIndex = 11
     box.Parent = frame
 
     local corner = Instance.new("UICorner")
@@ -546,6 +549,7 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     list.BorderSizePixel = 0
     list.ClipsDescendants = true
     list.Visible = false
+    list.ZIndex = 20
     list.Parent = frame
 
     local listLayout = Instance.new("UIListLayout")
@@ -570,6 +574,7 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
         optBtn.TextSize = 14
         optBtn.BorderSizePixel = 0
         optBtn.AutoButtonColor = false
+        optBtn.ZIndex = 21
         optBtn.Parent = list
 
         local optCorner = Instance.new("UICorner")
