@@ -540,7 +540,8 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     local list = Instance.new("Frame")
     list.Size = UDim2.new(1, 0, 0, 0)
     list.Position = UDim2.new(0, 0, 0, 30)
-    list.BackgroundColor3 = colors.Button
+    -- Match the option button background so no "gap" shows through around rounded corners
+    list.BackgroundColor3 = colors.Sidebar
     list.BorderSizePixel = 0
     list.ClipsDescendants = true
     list.Visible = false
