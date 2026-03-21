@@ -33,7 +33,8 @@ CreateToggle(text: string, callback: (boolean) -> ())
 ```
 Creates a slider with a value label.
 ```
-CreateSlider(text: string, min: number, max: number, defaultValue: number, callback: (number) -> ())
+CreateSlider(text: string, min: number, max: number, defaultValue: number, step: number, callback: (number) -> ()
+)
 ```
 Creates a Dropdown.
 ```
@@ -59,7 +60,7 @@ tab:CreateToggle("Toggle", function(state)
     print("Toggle state:", state)
 end)
 
-tab:CreateSlider("Slider", 0, 100, 50, function(value)
+tab:CreateSlider("Slider", 0, 100, 50, 0.5, function(value)
     print("Slider value:", value)
 end)
 
