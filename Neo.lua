@@ -15,9 +15,6 @@ local colors = {
     Success    = Color3.fromRGB(0, 200, 120),
 }
 
----------------------------------------------------------------------- 
--- Helpers
----------------------------------------------------------------------- 
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
@@ -76,9 +73,6 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
     return row
 end
 
----------------------------------------------------------------------- 
--- Window
----------------------------------------------------------------------- 
 function Neo:CreateWindow(title: string)
     local window = {}
     setmetatable(window, Neo)
@@ -207,9 +201,6 @@ function Neo:CreateWindow(title: string)
     return window
 end
 
----------------------------------------------------------------------- 
--- Tabs
----------------------------------------------------------------------- 
 function Neo:_createSettingsTab()
     if self._settingsCreated then return end
     self._settingsCreated = true
@@ -342,9 +333,6 @@ function Neo:CreateTab(name: string)
     return tab
 end
 
----------------------------------------------------------------------- 
--- Components
----------------------------------------------------------------------- 
 function Neo:CreateLabel(text: string)
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -20, 0, 25)
@@ -428,7 +416,9 @@ function Neo:CreateToggle(text: string, callback: (boolean)->())
     return frame
 end
 
-function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: number, callback: (number)->())
+function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: number, step: number, callback: (number)->())
+    step = step or 1
+
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 260, 0, 40)
     frame.BackgroundTransparency = 1
@@ -445,8 +435,8 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     lbl.Parent = frame
 
     local valLbl = Instance.new("TextLabel")
-    valLbl.Size = UDim2.new(0, 50, 0, 20)
-    valLbl.Position = UDim2.new(1, -50, 0, 0)
+    valLbl.Size = UDim2.new(0, 60, 0, 20)
+    valLbl.Position = UDim2.new(1, -60, 0, 0)
     valLbl.BackgroundTransparency = 1
     valLbl.Text = tostring(defaultValue)
     valLbl.Font = Enum.Font.Gotham
@@ -463,11 +453,20 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.Parent = frame
 
     local fill = Instance.new("Frame")
-    local startAlpha = (defaultValue - min) / (max - min)
-    fill.Size = UDim2.new(startAlpha, 0, 1, 0)
     fill.BackgroundColor3 = colors.Accent
-        fill.BorderSizePixel = 0
+    fill.BorderSizePixel = 0
     fill.Parent = bar
+
+    local function roundToStep(value, step)
+        return math.floor(value / step + 0.5) * step
+    end
+
+    local startValue = math.clamp(defaultValue, min, max)
+    startValue = roundToStep(startValue, step)
+    local startPct = (startValue - min) / (max - min)
+    fill.Size = UDim2.new(startPct, 0, 1, 0)
+
+    valLbl.Text = tostring(startValue)
 
     local dragging = false
     local mainFrame = self._mainFrame
@@ -475,10 +474,20 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     local function update(input)
         local rel = input.Position.X - bar.AbsolutePosition.X
         local pct = math.clamp(rel / bar.AbsoluteSize.X, 0, 1)
-        fill.Size = UDim2.new(pct, 0, 1, 0)
-        local value = math.floor(min + (max - min) * pct)
-        valLbl.Text = tostring(value)
-        if callback then callback(value) end
+
+        local rawValue = min + (max - min) * pct
+        local steppedValue = roundToStep(rawValue, step)
+        local value = math.clamp(steppedValue, min, max)
+
+        local newPct = (value - min) / (max - min)
+        fill.Size = UDim2.new(newPct, 0, 1, 0)
+
+        local decimals = tostring(step):find("%.") and #tostring(step):split(".")[2] or 0
+        valLbl.Text = string.format("%." .. decimals .. "f", value)
+
+        if callback then
+            callback(value)
+        end
     end
 
     bar.InputBegan:Connect(function(input)
@@ -511,9 +520,6 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
----------------------------------------------------------------------- 
--- Dropdown Component
----------------------------------------------------------------------- 
 function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: (string) -> ())
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 260, 0, 30)
@@ -540,7 +546,6 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     local list = Instance.new("Frame")
     list.Size = UDim2.new(1, 0, 0, 0)
     list.Position = UDim2.new(0, 0, 0, 30)
-    -- Match the option button background so no "gap" shows through around rounded corners
     list.BackgroundColor3 = colors.Sidebar
     list.BorderSizePixel = 0
     list.ClipsDescendants = true
@@ -553,7 +558,6 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     listLayout.Parent = list
 
     local listPadding = Instance.new("UIPadding")
-    -- Remove extra top gap so options sit flush against the main dropdown box
     listPadding.PaddingTop = UDim.new(0, 0)
     listPadding.PaddingBottom = UDim.new(0, 4)
     listPadding.PaddingLeft = UDim.new(0, 4)
@@ -567,7 +571,6 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
         list.Visible = state
 
         if state then
-            -- Use the actual content size so the dropdown height matches the options
             local contentHeight = listLayout.AbsoluteContentSize.Y
             local padTop = listPadding.PaddingTop.Offset
             local padBottom = listPadding.PaddingBottom.Offset
@@ -618,7 +621,5 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     return frame
 end
 
-
----------------------------------------------------------------------- 
 return Neo
 
