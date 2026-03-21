@@ -34,7 +34,6 @@ CreateToggle(text: string, callback: (boolean) -> ())
 Creates a slider with a value label.
 ```
 CreateSlider(text: string, min: number, max: number, defaultValue: number, step: number, callback: (number) -> ()
-)
 ```
 Creates a Dropdown.
 ```
