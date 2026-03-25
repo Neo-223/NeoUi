@@ -1,33 +1,27 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
 local Neo = {}
 Neo.__index = Neo
 
 local colors = {
-    Background = Color3.fromRGB(15, 15, 18),
-    Sidebar    = Color3.fromRGB(22, 22, 26),
-    Content    = Color3.fromRGB(18, 18, 22),
-    Outline    = Color3.fromRGB(45, 45, 52),
-    Button     = Color3.fromRGB(35, 35, 42),
-    Topbar     = Color3.fromRGB(12, 12, 15),
-    Accent     = Color3.fromRGB(0, 140, 255),
+    Background = Color3.fromRGB(18, 18, 22),
+    Sidebar    = Color3.fromRGB(28, 28, 34),
+    Content    = Color3.fromRGB(24, 24, 30),
+    Button     = Color3.fromRGB(45, 45, 55),
+    Topbar     = Color3.fromRGB(30, 30, 38),
+    Accent     = Color3.fromRGB(0, 170, 255),
     Success    = Color3.fromRGB(0, 200, 120),
 }
-
-local function tween(obj, info, goal)
-    return TweenService:Create(obj, TweenInfo.new(info, Enum.EasingStyle.Sine), goal):Play()
-end
 
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
-            tween(child, 0.2, {BackgroundColor3 = colors.Button})
+            child.BackgroundColor3 = colors.Button
         end
     end
-    tween(selectedBtn, 0.2, {BackgroundColor3 = colors.Accent})
+    selectedBtn.BackgroundColor3 = colors.Accent
 end
 
 local function createRebindRow(parent: Instance, labelText: string, defaultKey: Enum.KeyCode, onSet: (Enum.KeyCode)->(), state)
@@ -50,10 +44,6 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
-
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Color = colors.Outline
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
     btn.MouseButton1Click:Connect(function()
         btn.Text = labelText .. ": Press a key..."
@@ -117,18 +107,11 @@ function Neo:CreateWindow(title: string)
     mainCorner.CornerRadius = UDim.new(0, 10)
     mainCorner.Parent = mainFrame
 
-    local mainStroke = Instance.new("UIStroke", mainFrame)
-    mainStroke.Color = colors.Outline
-    mainStroke.Thickness = 1.2
-
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundColor3 = colors.Topbar
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
-    
-    local topCorner = Instance.new("UICorner", topBar)
-    topCorner.CornerRadius = UDim.new(0, 10)
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, -10, 1, 0)
@@ -238,8 +221,9 @@ function Neo:_createSettingsTab()
     btn.LayoutOrder = 1_000_000
     btn.Parent = self.Sidebar
 
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", btn).Color = colors.Outline
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
     local page = Instance.new("Frame")
     page.Name = "SettingsPage"
@@ -261,6 +245,7 @@ function Neo:_createSettingsTab()
     padding.Parent = page
 
     self.Pages["Settings"] = page
+
     tab.Page = page
     tab._mainFrame = self.MainFrame
 
@@ -283,7 +268,7 @@ end
 
 function Neo:CreateTab(name: string)
     if string.lower(name) == "settings" then
-        warn("[Neo] 'Settings' tab name is reserved.")
+        warn("[Neo] 'Settings' tab name is reserved by the library. Your tab will be named 'Settings (Custom)'.")
         name = "Settings (Custom)"
     end
 
@@ -304,8 +289,9 @@ function Neo:CreateTab(name: string)
     btn.LayoutOrder = self._tabOrder
     btn.Parent = self.Sidebar
 
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", btn).Color = colors.Outline
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
@@ -327,6 +313,7 @@ function Neo:CreateTab(name: string)
     padding.Parent = page
 
     self.Pages[name] = page
+
     tab.Page = page
     tab._mainFrame = self.MainFrame
 
@@ -362,6 +349,8 @@ end
 function Neo:UpdateLabelText(label: TextLabel, newText: string)
     if label and label:IsA("TextLabel") then
         label.Text = newText
+    else
+        warn("[Neo] Tried to update label text on invalid object.")
     end
 end
 
@@ -377,11 +366,9 @@ function Neo:CreateButton(text: string, callback: ()->())
     btn.AutoButtonColor = false
     btn.Parent = self.Page
 
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", btn).Color = colors.Outline
-
-    btn.MouseEnter:Connect(function() tween(btn, 0.2, {BackgroundColor3 = colors.Accent}) end)
-    btn.MouseLeave:Connect(function() tween(btn, 0.2, {BackgroundColor3 = colors.Button}) end)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
         if callback then callback() end
@@ -415,13 +402,14 @@ function Neo:CreateToggle(text: string, callback: (boolean)->())
     box.AutoButtonColor = false
     box.Parent = frame
 
-    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", box).Color = colors.Outline
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = box
 
     local state = false
     box.MouseButton1Click:Connect(function()
         state = not state
-        tween(box, 0.2, {BackgroundColor3 = state and colors.Success or colors.Button})
+        box.BackgroundColor3 = state and colors.Success or colors.Button
         if callback then callback(state) end
     end)
 
@@ -463,13 +451,11 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.BackgroundColor3 = colors.Button
     bar.BorderSizePixel = 0
     bar.Parent = frame
-    Instance.new("UICorner", bar)
 
     local fill = Instance.new("Frame")
     fill.BackgroundColor3 = colors.Accent
     fill.BorderSizePixel = 0
     fill.Parent = bar
-    Instance.new("UICorner", fill)
 
     local function roundToStep(value, step)
         return math.floor(value / step + 0.5) * step
@@ -488,19 +474,29 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     local function update(input)
         local rel = input.Position.X - bar.AbsolutePosition.X
         local pct = math.clamp(rel / bar.AbsoluteSize.X, 0, 1)
+
         local rawValue = min + (max - min) * pct
         local steppedValue = roundToStep(rawValue, step)
         local value = math.clamp(steppedValue, min, max)
-        fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+
+        local newPct = (value - min) / (max - min)
+        fill.Size = UDim2.new(newPct, 0, 1, 0)
+
         local decimals = tostring(step):find("%.") and #tostring(step):split(".")[2] or 0
         valLbl.Text = string.format("%." .. decimals .. "f", value)
-        if callback then callback(value) end
+
+        if callback then
+            callback(value)
+        end
     end
 
     bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            if mainFrame then mainFrame.Active = false mainFrame.Draggable = false end
+            if mainFrame then
+                mainFrame.Active = false
+                mainFrame.Draggable = false
+            end
             update(input)
         end
     end)
@@ -508,7 +504,10 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
-            if mainFrame then mainFrame.Active = true mainFrame.Draggable = true end
+            if mainFrame then
+                mainFrame.Active = true
+                mainFrame.Draggable = true
+            end
         end
     end)
 
@@ -540,8 +539,9 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     box.ZIndex = 11
     box.Parent = frame
 
-    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", box).Color = colors.Outline
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = box
 
     local list = Instance.new("Frame")
     list.Size = UDim2.new(1, 0, 0, 0)
@@ -552,7 +552,6 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     list.Visible = false
     list.ZIndex = 20
     list.Parent = frame
-    Instance.new("UIStroke", list).Color = colors.Outline
 
     local listLayout = Instance.new("UIListLayout")
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -570,9 +569,12 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     local function setExpanded(state: boolean)
         expanded = state
         list.Visible = state
+
         if state then
             local contentHeight = listLayout.AbsoluteContentSize.Y
-            local listHeight = contentHeight + listPadding.PaddingTop.Offset + listPadding.PaddingBottom.Offset
+            local padTop = listPadding.PaddingTop.Offset
+            local padBottom = listPadding.PaddingBottom.Offset
+            local listHeight = contentHeight + padTop + padBottom
             list.Size = UDim2.new(1, 0, 0, listHeight)
             frame.Size = UDim2.new(0, 260, 0, 30 + listHeight)
         else
@@ -594,14 +596,27 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
         optBtn.ZIndex = 21
         optBtn.Parent = list
 
+        local optCorner = Instance.new("UICorner")
+        optCorner.CornerRadius = UDim.new(0, 6)
+        optCorner.Parent = optBtn
+
         optBtn.MouseButton1Click:Connect(function()
             box.Text = option
             setExpanded(false)
             if callback then callback(option) end
         end)
+
+        optBtn.MouseEnter:Connect(function()
+            optBtn.BackgroundColor3 = colors.Accent
+        end)
+        optBtn.MouseLeave:Connect(function()
+            optBtn.BackgroundColor3 = colors.Sidebar
+        end)
     end
 
-    box.MouseButton1Click:Connect(function() setExpanded(not expanded) end)
+    box.MouseButton1Click:Connect(function()
+        setExpanded(not expanded)
+    end)
 
     return frame
 end
