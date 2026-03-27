@@ -248,6 +248,7 @@ function Neo:_createSettingsTab()
 
     tab.Page = page
     tab._mainFrame = self.MainFrame
+    tab._gui = self.Gui
 
     local function selectThis()
         for _, p in pairs(self.Pages) do p.Visible = false end
@@ -316,6 +317,7 @@ function Neo:CreateTab(name: string)
 
     tab.Page = page
     tab._mainFrame = self.MainFrame
+    tab._gui = self.Gui
 
     local function selectThis()
         for _, p in pairs(self.Pages) do p.Visible = false end
@@ -573,53 +575,37 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     previewCorner.CornerRadius = UDim.new(0, 5)
     previewCorner.Parent = preview
 
-    local expandedHolder = Instance.new("Frame")
-    expandedHolder.Size = UDim2.new(1, 0, 0, 142)
-    expandedHolder.Position = UDim2.new(0, 0, 0, 35)
-    expandedHolder.BackgroundColor3 = colors.Sidebar
-    expandedHolder.BorderSizePixel = 0
-    expandedHolder.Visible = false
-    expandedHolder.Parent = frame
+    local parentGui = self._gui or (self._mainFrame and self._mainFrame.Parent) or frame.Parent
+    local popup = Instance.new("Frame")
+    popup.Size = UDim2.new(0, 250, 0, 122)
+    popup.BackgroundColor3 = colors.Sidebar
+    popup.BorderSizePixel = 0
+    popup.Visible = false
+    popup.ZIndex = 50
+    popup.Parent = parentGui
 
-    local holderCorner = Instance.new("UICorner")
-    holderCorner.CornerRadius = UDim.new(0, 6)
-    holderCorner.Parent = expandedHolder
+    local popupCorner = Instance.new("UICorner")
+    popupCorner.CornerRadius = UDim.new(0, 6)
+    popupCorner.Parent = popup
 
-    local holderPadding = Instance.new("UIPadding")
-    holderPadding.PaddingTop = UDim.new(0, 8)
-    holderPadding.PaddingBottom = UDim.new(0, 8)
-    holderPadding.PaddingLeft = UDim.new(0, 8)
-    holderPadding.PaddingRight = UDim.new(0, 8)
-    holderPadding.Parent = expandedHolder
-
-    local currentColor = defaultColor
-    local isExpanded = false
-    local mainFrame = self._mainFrame
-    local currentH, currentS, currentV = Color3.toHSV(defaultColor)
-
-    local function getRgbString(color: Color3)
-        return string.format("%d,%d,%d", math.floor(color.R * 255 + 0.5), math.floor(color.G * 255 + 0.5), math.floor(color.B * 255 + 0.5))
-    end
-
-    local function applyColor(color: Color3)
-        currentColor = color
-        preview.BackgroundColor3 = color
-        valueLabel.Text = getRgbString(color)
-        if callback then
-            callback(color)
-        end
-    end
+    local popupPadding = Instance.new("UIPadding")
+    popupPadding.PaddingTop = UDim.new(0, 8)
+    popupPadding.PaddingBottom = UDim.new(0, 8)
+    popupPadding.PaddingLeft = UDim.new(0, 8)
+    popupPadding.PaddingRight = UDim.new(0, 8)
+    popupPadding.Parent = popup
 
     local pickerBody = Instance.new("Frame")
-    pickerBody.Size = UDim2.new(1, -16, 0, 105)
-    pickerBody.Position = UDim2.new(0, 8, 0, 8)
+    pickerBody.Size = UDim2.new(1, 0, 1, 0)
     pickerBody.BackgroundTransparency = 1
-    pickerBody.Parent = expandedHolder
+    pickerBody.ZIndex = 51
+    pickerBody.Parent = popup
 
     local svPicker = Instance.new("Frame")
-    svPicker.Size = UDim2.new(1, -28, 0, 105)
-    svPicker.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
+    svPicker.Size = UDim2.new(1, -26, 1, 0)
+    svPicker.BackgroundColor3 = Color3.fromHSV(0, 1, 1)
     svPicker.BorderSizePixel = 0
+    svPicker.ZIndex = 52
     svPicker.Parent = pickerBody
 
     local svCorner = Instance.new("UICorner")
@@ -630,32 +616,27 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     satOverlay.Size = UDim2.new(1, 0, 1, 0)
     satOverlay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     satOverlay.BorderSizePixel = 0
+    satOverlay.ZIndex = 53
     satOverlay.Parent = svPicker
 
     local satGradient = Instance.new("UIGradient")
-    satGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
-    })
+    satGradient.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 255, 255))
     satGradient.Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 0),
         NumberSequenceKeypoint.new(1, 1),
     })
-    satOverlay.BorderSizePixel = 0
     satGradient.Parent = satOverlay
 
     local valOverlay = Instance.new("Frame")
     valOverlay.Size = UDim2.new(1, 0, 1, 0)
     valOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     valOverlay.BorderSizePixel = 0
+    valOverlay.ZIndex = 54
     valOverlay.Parent = svPicker
 
     local valGradient = Instance.new("UIGradient")
     valGradient.Rotation = 90
-    valGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0)),
-    })
+    valGradient.Color = ColorSequence.new(Color3.fromRGB(0, 0, 0), Color3.fromRGB(0, 0, 0))
     valGradient.Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(1, 0),
@@ -667,6 +648,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     svCursor.AnchorPoint = Vector2.new(0.5, 0.5)
     svCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     svCursor.BorderSizePixel = 0
+    svCursor.ZIndex = 55
     svCursor.Parent = svPicker
 
     local svCursorCorner = Instance.new("UICorner")
@@ -679,10 +661,11 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     svCursorStroke.Parent = svCursor
 
     local hueBar = Instance.new("Frame")
-    hueBar.Size = UDim2.new(0, 16, 0, 105)
+    hueBar.Size = UDim2.new(0, 16, 1, 0)
     hueBar.Position = UDim2.new(1, -16, 0, 0)
     hueBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     hueBar.BorderSizePixel = 0
+    hueBar.ZIndex = 52
     hueBar.Parent = pickerBody
 
     local hueCorner = Instance.new("UICorner")
@@ -692,20 +675,22 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     local hueGradient = Instance.new("UIGradient")
     hueGradient.Rotation = 90
     hueGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
-        ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
-        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
-        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
-        ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
-        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
-        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.00, Color3.fromHSV(0.00, 1, 1)),
+        ColorSequenceKeypoint.new(0.16, Color3.fromHSV(0.16, 1, 1)),
+        ColorSequenceKeypoint.new(0.33, Color3.fromHSV(0.33, 1, 1)),
+        ColorSequenceKeypoint.new(0.50, Color3.fromHSV(0.50, 1, 1)),
+        ColorSequenceKeypoint.new(0.66, Color3.fromHSV(0.66, 1, 1)),
+        ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
+        ColorSequenceKeypoint.new(1.00, Color3.fromHSV(1.00, 1, 1)),
     })
     hueGradient.Parent = hueBar
 
     local hueCursor = Instance.new("Frame")
     hueCursor.Size = UDim2.new(1, 0, 0, 2)
+    hueCursor.AnchorPoint = Vector2.new(0, 0.5)
     hueCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     hueCursor.BorderSizePixel = 0
+    hueCursor.ZIndex = 55
     hueCursor.Parent = hueBar
 
     local hueCursorStroke = Instance.new("UIStroke")
@@ -713,33 +698,106 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     hueCursorStroke.Thickness = 1
     hueCursorStroke.Parent = hueCursor
 
+    local committedColor = defaultColor
+    local liveColor = defaultColor
+    local currentH, currentS, currentV = Color3.toHSV(defaultColor)
+    local isOpen = false
     local svDragging = false
     local hueDragging = false
+    local mainFrame = self._mainFrame
+
+    local function getRgbString(color: Color3)
+        return string.format("%d,%d,%d", math.floor(color.R * 255 + 0.5), math.floor(color.G * 255 + 0.5), math.floor(color.B * 255 + 0.5))
+    end
+
+    local function pointIn(guiObj: GuiObject, x: number, y: number)
+        local pos = guiObj.AbsolutePosition
+        local size = guiObj.AbsoluteSize
+        return x >= pos.X and x <= (pos.X + size.X) and y >= pos.Y and y <= (pos.Y + size.Y)
+    end
+
+    local function updateDisplay(color: Color3)
+        liveColor = color
+        preview.BackgroundColor3 = color
+        valueLabel.Text = getRgbString(color)
+    end
 
     local function updateVisualsFromHSV()
         svPicker.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
         svCursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
-        hueCursor.Position = UDim2.new(0, 0, currentH, -1)
+        hueCursor.Position = UDim2.new(0, 0, currentH, 0)
     end
 
     local function applyFromHSV()
-        applyColor(Color3.fromHSV(currentH, currentS, currentV))
+        updateDisplay(Color3.fromHSV(currentH, currentS, currentV))
         updateVisualsFromHSV()
+    end
+
+    local function commitSelection()
+        committedColor = liveColor
+        if callback then
+            callback(committedColor)
+        end
+    end
+
+    local function placePopup()
+        local btnPos = mainButton.AbsolutePosition
+        local btnSize = mainButton.AbsoluteSize
+        local menuRightX = (mainFrame and (mainFrame.AbsolutePosition.X + mainFrame.AbsoluteSize.X + 8)) or (btnPos.X + btnSize.X + 8)
+        popup.Position = UDim2.fromOffset(menuRightX, btnPos.Y)
+    end
+
+    local function closePopup(commit: boolean)
+        if not isOpen then return end
+        isOpen = false
+        popup.Visible = false
+        svDragging = false
+        hueDragging = false
+        if commit then
+            commitSelection()
+        else
+            local h, s, v = Color3.toHSV(committedColor)
+            currentH, currentS, currentV = h, s, v
+            applyFromHSV()
+        end
+        if mainFrame then
+            mainFrame.Active = true
+            mainFrame.Draggable = true
+        end
+    end
+
+    local function openPopup()
+        if isOpen then return end
+        isOpen = true
+        placePopup()
+        popup.Visible = true
+    end
+
+    local function togglePopup()
+        if isOpen then
+            closePopup(true)
+        else
+            openPopup()
+        end
     end
 
     local function updateSV(input)
         local relX = input.Position.X - svPicker.AbsolutePosition.X
         local relY = input.Position.Y - svPicker.AbsolutePosition.Y
-        currentS = math.clamp(relX / svPicker.AbsoluteSize.X, 0, 1)
-        currentV = 1 - math.clamp(relY / svPicker.AbsoluteSize.Y, 0, 1)
+        currentS = math.clamp(relX / math.max(1, svPicker.AbsoluteSize.X), 0, 1)
+        currentV = 1 - math.clamp(relY / math.max(1, svPicker.AbsoluteSize.Y), 0, 1)
         applyFromHSV()
     end
 
     local function updateHue(input)
         local relY = input.Position.Y - hueBar.AbsolutePosition.Y
-        currentH = math.clamp(relY / hueBar.AbsoluteSize.Y, 0, 1)
+        currentH = math.clamp(relY / math.max(1, hueBar.AbsoluteSize.Y), 0, 1)
         applyFromHSV()
     end
+
+    mainButton.MouseButton1Click:Connect(function()
+        togglePopup()
+    end)
 
     svPicker.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -789,21 +847,27 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
                 updateSV(input)
             elseif hueDragging then
                 updateHue(input)
+            elseif isOpen then
+                placePopup()
             end
         end
     end)
 
-    local function setExpanded(state: boolean)
-        isExpanded = state
-        expandedHolder.Visible = state
-        frame.Size = state and UDim2.new(0, 260, 0, 182) or UDim2.new(0, 260, 0, 30)
-    end
+    UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if not isOpen then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 
-    mainButton.MouseButton1Click:Connect(function()
-        setExpanded(not isExpanded)
+        local x, y = input.Position.X, input.Position.Y
+        if pointIn(mainButton, x, y) or pointIn(popup, x, y) then
+            return
+        end
+
+        closePopup(true)
     end)
 
-    applyFromHSV()
+    updateDisplay(committedColor)
+    updateVisualsFromHSV()
 
     return frame
 end
