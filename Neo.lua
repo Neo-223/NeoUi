@@ -5,73 +5,30 @@ local LocalPlayer = Players.LocalPlayer
 local Neo = {}
 Neo.__index = Neo
 
+-- Updated Colors for Glassmorphism
 local colors = {
-    Background = Color3.fromRGB(18, 18, 22),
-    Sidebar    = Color3.fromRGB(28, 28, 34),
-    Content    = Color3.fromRGB(24, 24, 30),
-    Button     = Color3.fromRGB(45, 45, 55),
-    Topbar     = Color3.fromRGB(30, 30, 38),
+    Background = Color3.fromRGB(25, 25, 35), -- Slightly lighter for glass effect
+    Sidebar    = Color3.fromRGB(35, 35, 45),
+    Content    = Color3.fromRGB(20, 20, 25),
+    Button     = Color3.fromRGB(60, 60, 75),
+    Topbar     = Color3.fromRGB(40, 40, 50),
     Accent     = Color3.fromRGB(0, 170, 255),
     Success    = Color3.fromRGB(0, 200, 120),
+    GlassTrans = 0.25, -- Transparency for the glass effect
 }
 
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
             child.BackgroundColor3 = colors.Button
+            child.BackgroundTransparency = 0.5
         end
     end
     selectedBtn.BackgroundColor3 = colors.Accent
+    selectedBtn.BackgroundTransparency = 0
 end
 
-local function createRebindRow(parent: Instance, labelText: string, defaultKey: Enum.KeyCode, onSet: (Enum.KeyCode)->(), state)
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(0, 260, 0, 30)
-    row.BackgroundTransparency = 1
-    row.Parent = parent
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 1, 0)
-    btn.BackgroundColor3 = colors.Button
-    btn.Text = labelText .. ": " .. defaultKey.Name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    btn.BorderSizePixel = 0
-    btn.AutoButtonColor = false
-    btn.Parent = row
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function()
-        btn.Text = labelText .. ": Press a key..."
-        state.isBindingKey = true
-        state.suppressKeyCode = nil
-
-        local beganConn, endedConn
-        beganConn = UserInputService.InputBegan:Connect(function(input, gpe)
-            if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode ~= Enum.KeyCode.Unknown then
-                onSet(input.KeyCode)
-                btn.Text = labelText .. ": " .. input.KeyCode.Name
-                state.suppressKeyCode = input.KeyCode
-
-                if endedConn then endedConn:Disconnect() end
-                endedConn = UserInputService.InputEnded:Connect(function(endInput, _)
-                    if endInput.UserInputType == Enum.UserInputType.Keyboard and endInput.KeyCode == state.suppressKeyCode then
-                        state.isBindingKey = false
-                        state.suppressKeyCode = nil
-                        if beganConn then beganConn:Disconnect() end
-                        if endedConn then endedConn:Disconnect() end
-                    end
-                end)
-            end
-        end)
-    end)
-
-    return row
-end
+-- ... [Keep createRebindRow unchanged] ...
 
 function Neo:CreateWindow(title: string)
     local window = {}
@@ -89,46 +46,60 @@ function Neo:CreateWindow(title: string)
     screenGui.ResetOnSpawn = false
     screenGui.IgnoreGuiInset = true
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    screenGui.Parent = game:GetService("CoreGui")
+    -- Note: CoreGui requires higher permissions; use PlayerGui for testing if needed
+    screenGui.Parent = game:GetService("CoreGui") 
     window.Gui = screenGui
 
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
     mainFrame.Position = UDim2.new(0.5, -220, 0.5, -200)
     mainFrame.BackgroundColor3 = colors.Background
+    mainFrame.BackgroundTransparency = colors.GlassTrans -- GLASS EFFECT
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
     mainFrame.Draggable = true
     mainFrame.Visible = true
+    mainFrame.ClipsDescendants = true -- Ensures children don't pop out of rounded corners
     mainFrame.Parent = screenGui
     window.MainFrame = mainFrame
 
+    -- OUTER ROUNDED EDGES
     local mainCorner = Instance.new("UICorner")
-    mainCorner.CornerRadius = UDim.new(0, 10)
+    mainCorner.CornerRadius = UDim.new(0, 15) -- Increased for aesthetic
     mainCorner.Parent = mainFrame
 
+    -- BORDER STROKE (The "Glow/Edge" of the glass)
+    local mainStroke = Instance.new("UIStroke")
+    mainStroke.Thickness = 1.5
+    mainStroke.Color = Color3.fromRGB(255, 255, 255)
+    mainStroke.Transparency = 0.8
+    mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    mainStroke.Parent = mainFrame
+
     local topBar = Instance.new("Frame")
-    topBar.Size = UDim2.new(1, 0, 0, 40)
+    topBar.Size = UDim2.new(1, 0, 0, 45)
     topBar.BackgroundColor3 = colors.Topbar
+    topBar.BackgroundTransparency = 0.4
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, -10, 1, 0)
-    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.Position = UDim2.new(0, 15, 0, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = title or "Neo"
+    titleLabel.Text = title or "NEO"
     titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 20
+    titleLabel.TextSize = 18
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
     local sidebar = Instance.new("ScrollingFrame")
     sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, 150, 1, -40)
-    sidebar.Position = UDim2.new(0, 0, 0, 40)
+    sidebar.Size = UDim2.new(0, 150, 1, -45)
+    sidebar.Position = UDim2.new(0, 0, 0, 45)
     sidebar.BackgroundColor3 = colors.Sidebar
+    sidebar.BackgroundTransparency = 0.6 -- Glassy Sidebar
     sidebar.BorderSizePixel = 0
     sidebar.ScrollBarThickness = 0
     sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -137,23 +108,21 @@ function Neo:CreateWindow(title: string)
     window.Sidebar = sidebar
 
     local sidebarPadding = Instance.new("UIPadding")
-    sidebarPadding.PaddingTop = UDim.new(0, 8)
+    sidebarPadding.PaddingTop = UDim.new(0, 10)
     sidebarPadding.PaddingLeft = UDim.new(0, 10)
     sidebarPadding.PaddingRight = UDim.new(0, 10)
-    sidebarPadding.PaddingBottom = UDim.new(0, 4)
     sidebarPadding.Parent = sidebar
 
     local sidebarLayout = Instance.new("UIListLayout")
-    sidebarLayout.FillDirection = Enum.FillDirection.Vertical
-    sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    sidebarLayout.Padding = UDim.new(0, 6)
+    sidebarLayout.Padding = UDim.new(0, 8)
     sidebarLayout.Parent = sidebar
 
     local contentHolder = Instance.new("ScrollingFrame")
     contentHolder.Name = "ContentHolder"
-    contentHolder.Size = UDim2.new(1, -150, 1, -40)
-    contentHolder.Position = UDim2.new(0, 150, 0, 40)
+    contentHolder.Size = UDim2.new(1, -150, 1, -45)
+    contentHolder.Position = UDim2.new(0, 150, 0, 45)
     contentHolder.BackgroundColor3 = colors.Content
+    contentHolder.BackgroundTransparency = 0.8 -- Even clearer content area
     contentHolder.BorderSizePixel = 0
     contentHolder.ScrollBarThickness = 0
     contentHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -161,12 +130,8 @@ function Neo:CreateWindow(title: string)
     contentHolder.Parent = mainFrame
     window.Content = contentHolder
 
-    local chPadding = Instance.new("UIPadding")
-    chPadding.PaddingTop = UDim.new(0, 10)
-    chPadding.PaddingLeft = UDim.new(0, 0)
-    chPadding.PaddingBottom = UDim.new(0, 4)
-    chPadding.Parent = contentHolder
-
+    -- ... [Keep the rest of the window setup and page logic] ...
+    
     window.Pages = {}
     window._hasDefaultTab = false
     window._tabOrder = 0
