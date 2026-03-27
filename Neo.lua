@@ -7,22 +7,75 @@ local Neo = {}
 Neo.__index = Neo
 
 local colors = {
-    Background = Color3.fromRGB(18, 18, 22),
-    Sidebar    = Color3.fromRGB(28, 28, 34),
-    Content    = Color3.fromRGB(24, 24, 30),
-    Button     = Color3.fromRGB(45, 45, 55),
-    Topbar     = Color3.fromRGB(30, 30, 38),
+    Background = Color3.fromRGB(20, 24, 32),
+    Sidebar    = Color3.fromRGB(23, 30, 44),
+    Content    = Color3.fromRGB(20, 28, 42),
+    Button     = Color3.fromRGB(54, 72, 102),
+    Topbar     = Color3.fromRGB(22, 30, 46),
     Accent     = Color3.fromRGB(0, 170, 255),
     Success    = Color3.fromRGB(0, 200, 120),
 }
+
+local function addCorner(instance: Instance, radius: number)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = instance
+end
+
+local function styleGlassPanel(frame: GuiObject, backgroundTransparency: number)
+    frame.BackgroundTransparency = backgroundTransparency
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(110, 130, 165)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.86
+    stroke.Parent = frame
+
+    local gradient = Instance.new("UIGradient")
+    gradient.Rotation = 125
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(132, 168, 230)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(64, 84, 124)),
+    })
+    gradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.9),
+        NumberSequenceKeypoint.new(1, 0.98),
+    })
+    gradient.Parent = frame
+end
+
+local function styleGlassButton(btn: TextButton, radius: number)
+    btn.BackgroundTransparency = 0.5
+    addCorner(btn, radius)
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(125, 160, 220)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.8
+    stroke.Parent = btn
+
+    local gradient = Instance.new("UIGradient")
+    gradient.Rotation = 115
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(110, 145, 210)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(65, 86, 124)),
+    })
+    gradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.88),
+        NumberSequenceKeypoint.new(1, 0.97),
+    })
+    gradient.Parent = btn
+end
 
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
             child.BackgroundColor3 = colors.Button
+            child.BackgroundTransparency = 0.5
         end
     end
-    selectedBtn.BackgroundColor3 = colors.Accent
+    selectedBtn.BackgroundColor3 = Color3.fromRGB(74, 122, 196)
+    selectedBtn.BackgroundTransparency = 0.25
 end
 
 local function createRebindRow(parent: Instance, labelText: string, defaultKey: Enum.KeyCode, onSet: (Enum.KeyCode)->(), state)
@@ -41,10 +94,7 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
     btn.Parent = row
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    styleGlassButton(btn, 7)
 
     btn.MouseButton1Click:Connect(function()
         btn.Text = labelText .. ": Press a key..."
@@ -99,7 +149,7 @@ function Neo:CreateWindow(title: string)
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
     mainFrame.Position = UDim2.new(0.5, -220, 0.5, -200)
     mainFrame.BackgroundColor3 = colors.Background
-    mainFrame.BackgroundTransparency = 0.14
+    mainFrame.BackgroundTransparency = 0.32
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
     mainFrame.Draggable = true
@@ -114,20 +164,20 @@ function Neo:CreateWindow(title: string)
 
     local glassGradient = Instance.new("UIGradient")
     glassGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(175, 190, 220)),
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(112, 145, 210)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(38, 50, 74)),
     })
     glassGradient.Rotation = 115
     glassGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.9),
-        NumberSequenceKeypoint.new(1, 0.98),
+        NumberSequenceKeypoint.new(0, 0.93),
+        NumberSequenceKeypoint.new(1, 0.99),
     })
     glassGradient.Parent = mainFrame
 
     local glassStroke = Instance.new("UIStroke")
-    glassStroke.Color = Color3.fromRGB(190, 210, 240)
+    glassStroke.Color = Color3.fromRGB(88, 110, 146)
     glassStroke.Thickness = 1
-    glassStroke.Transparency = 0.75
+    glassStroke.Transparency = 0.9
     glassStroke.Parent = mainFrame
 
     local menuScale = Instance.new("UIScale")
@@ -137,9 +187,10 @@ function Neo:CreateWindow(title: string)
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundColor3 = colors.Topbar
-    topBar.BackgroundTransparency = 0.2
+    topBar.BackgroundTransparency = 0.4
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
+    styleGlassPanel(topBar, topBar.BackgroundTransparency)
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, -10, 1, 0)
@@ -157,7 +208,7 @@ function Neo:CreateWindow(title: string)
     sidebar.Size = UDim2.new(0, 150, 1, -40)
     sidebar.Position = UDim2.new(0, 0, 0, 40)
     sidebar.BackgroundColor3 = colors.Sidebar
-    sidebar.BackgroundTransparency = 0.22
+    sidebar.BackgroundTransparency = 0.45
     sidebar.BorderSizePixel = 0
     sidebar.ScrollBarThickness = 0
     sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -183,7 +234,7 @@ function Neo:CreateWindow(title: string)
     contentHolder.Size = UDim2.new(1, -150, 1, -40)
     contentHolder.Position = UDim2.new(0, 150, 0, 40)
     contentHolder.BackgroundColor3 = colors.Content
-    contentHolder.BackgroundTransparency = 0.2
+    contentHolder.BackgroundTransparency = 0.45
     contentHolder.BorderSizePixel = 0
     contentHolder.ScrollBarThickness = 0
     contentHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -203,10 +254,12 @@ function Neo:CreateWindow(title: string)
     window._settingsCreated = false
     window._connections = {}
 
-    local showTweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local hideTweenInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+    local showTweenInfo = TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local showSettleTweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local hideTweenInfo = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
     local shownPosition = UDim2.new(0.5, -220, 0.5, -200)
-    local hiddenPosition = UDim2.new(0.5, -220, 0.5, -184)
+    local overshootPosition = UDim2.new(0.5, -220, 0.5, -206)
+    local hiddenPosition = UDim2.new(0.5, -220, 0.5, -170)
 
     function window:Toggle()
         if self._state.isAnimating then
@@ -219,24 +272,41 @@ function Neo:CreateWindow(title: string)
         if openTarget then
             self.MainFrame.Visible = true
             self.MainFrame.Position = hiddenPosition
-            menuScale.Scale = 0.94
+            menuScale.Scale = 0.8
+            self.MainFrame.BackgroundTransparency = 0.52
 
-            local showScaleTween = TweenService:Create(menuScale, showTweenInfo, { Scale = 1 })
-            local showPosTween = TweenService:Create(self.MainFrame, showTweenInfo, { Position = shownPosition })
+            local showScaleTween = TweenService:Create(menuScale, showTweenInfo, { Scale = 1.03 })
+            local showPosTween = TweenService:Create(self.MainFrame, showTweenInfo, {
+                Position = overshootPosition,
+                BackgroundTransparency = 0.32,
+            })
             showScaleTween:Play()
             showPosTween:Play()
 
             showPosTween.Completed:Once(function()
-                self._state.isMenuOpen = true
-                self._state.isAnimating = false
+                local settleScaleTween = TweenService:Create(menuScale, showSettleTweenInfo, { Scale = 1 })
+                local settlePosTween = TweenService:Create(self.MainFrame, showSettleTweenInfo, { Position = shownPosition })
+                settleScaleTween:Play()
+                settlePosTween:Play()
+
+                settlePosTween.Completed:Once(function()
+                    self._state.isMenuOpen = true
+                    self._state.isAnimating = false
+                end)
             end)
         else
-            local hideScaleTween = TweenService:Create(menuScale, hideTweenInfo, { Scale = 0.94 })
-            local hidePosTween = TweenService:Create(self.MainFrame, hideTweenInfo, { Position = hiddenPosition })
+            local hideScaleTween = TweenService:Create(menuScale, hideTweenInfo, { Scale = 0.82 })
+            local hidePosTween = TweenService:Create(self.MainFrame, hideTweenInfo, {
+                Position = hiddenPosition,
+                BackgroundTransparency = 0.58,
+            })
             hideScaleTween:Play()
             hidePosTween:Play()
 
             hidePosTween.Completed:Once(function()
+                self.MainFrame.BackgroundTransparency = 0.32
+                menuScale.Scale = 1
+                self.MainFrame.Position = shownPosition
                 self.MainFrame.Visible = false
                 self._state.isMenuOpen = false
                 self._state.isAnimating = false
@@ -287,10 +357,7 @@ function Neo:_createSettingsTab()
     btn.AutoButtonColor = false
     btn.LayoutOrder = 1_000_000
     btn.Parent = self.Sidebar
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    styleGlassButton(btn, 7)
 
     local page = Instance.new("Frame")
     page.Name = "SettingsPage"
@@ -355,10 +422,7 @@ function Neo:CreateTab(name: string)
     self._tabOrder += 1
     btn.LayoutOrder = self._tabOrder
     btn.Parent = self.Sidebar
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    styleGlassButton(btn, 7)
 
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
@@ -432,10 +496,7 @@ function Neo:CreateButton(text: string, callback: ()->())
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
     btn.Parent = self.Page
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    styleGlassButton(btn, 7)
 
     btn.MouseButton1Click:Connect(function()
         if callback then callback() end
@@ -468,10 +529,7 @@ function Neo:CreateToggle(text: string, callback: (boolean)->())
     box.BorderSizePixel = 0
     box.AutoButtonColor = false
     box.Parent = frame
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = box
+    styleGlassButton(box, 7)
 
     local state = false
     box.MouseButton1Click:Connect(function()
@@ -516,12 +574,15 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.Size = UDim2.new(1, 0, 0, 10)
     bar.Position = UDim2.new(0, 0, 0, 25)
     bar.BackgroundColor3 = colors.Button
+    bar.BackgroundTransparency = 0.45
     bar.BorderSizePixel = 0
     bar.Parent = frame
+    addCorner(bar, 6)
 
     local fill = Instance.new("Frame")
     fill.BackgroundColor3 = colors.Accent
     fill.BorderSizePixel = 0
+    addCorner(fill, 6)
     fill.Parent = bar
 
     local function roundToStep(value, step)
@@ -605,20 +666,19 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     box.AutoButtonColor = false
     box.ZIndex = 11
     box.Parent = frame
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = box
+    styleGlassButton(box, 7)
 
     local list = Instance.new("Frame")
     list.Size = UDim2.new(1, 0, 0, 0)
     list.Position = UDim2.new(0, 0, 0, 30)
     list.BackgroundColor3 = colors.Sidebar
+    list.BackgroundTransparency = 0.34
     list.BorderSizePixel = 0
     list.ClipsDescendants = true
     list.Visible = false
     list.ZIndex = 20
     list.Parent = frame
+    addCorner(list, 8)
 
     local listLayout = Instance.new("UIListLayout")
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -662,10 +722,7 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
         optBtn.AutoButtonColor = false
         optBtn.ZIndex = 21
         optBtn.Parent = list
-
-        local optCorner = Instance.new("UICorner")
-        optCorner.CornerRadius = UDim.new(0, 6)
-        optCorner.Parent = optBtn
+        styleGlassButton(optBtn, 6)
 
         optBtn.MouseButton1Click:Connect(function()
             box.Text = option
@@ -674,10 +731,12 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
         end)
 
         optBtn.MouseEnter:Connect(function()
-            optBtn.BackgroundColor3 = colors.Accent
+            optBtn.BackgroundColor3 = Color3.fromRGB(84, 146, 230)
+            optBtn.BackgroundTransparency = 0.22
         end)
         optBtn.MouseLeave:Connect(function()
-            optBtn.BackgroundColor3 = colors.Sidebar
+            optBtn.BackgroundColor3 = colors.Button
+            optBtn.BackgroundTransparency = 0.5
         end)
     end
 
