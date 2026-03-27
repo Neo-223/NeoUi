@@ -1,81 +1,27 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
 local Neo = {}
 Neo.__index = Neo
 
 local colors = {
-    Background = Color3.fromRGB(20, 24, 32),
-    Sidebar    = Color3.fromRGB(23, 30, 44),
-    Content    = Color3.fromRGB(20, 28, 42),
-    Button     = Color3.fromRGB(54, 72, 102),
-    Topbar     = Color3.fromRGB(22, 30, 46),
+    Background = Color3.fromRGB(18, 18, 22),
+    Sidebar    = Color3.fromRGB(28, 28, 34),
+    Content    = Color3.fromRGB(24, 24, 30),
+    Button     = Color3.fromRGB(45, 45, 55),
+    Topbar     = Color3.fromRGB(30, 30, 38),
     Accent     = Color3.fromRGB(0, 170, 255),
     Success    = Color3.fromRGB(0, 200, 120),
 }
-
-local function addCorner(instance: Instance, radius: number)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius)
-    corner.Parent = instance
-end
-
-local function styleGlassPanel(frame: GuiObject, backgroundTransparency: number)
-    frame.BackgroundTransparency = backgroundTransparency
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(110, 130, 165)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.86
-    stroke.Parent = frame
-
-    local gradient = Instance.new("UIGradient")
-    gradient.Rotation = 125
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(132, 168, 230)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(64, 84, 124)),
-    })
-    gradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.9),
-        NumberSequenceKeypoint.new(1, 0.98),
-    })
-    gradient.Parent = frame
-end
-
-local function styleGlassButton(btn: TextButton, radius: number)
-    btn.BackgroundTransparency = 0.5
-    addCorner(btn, radius)
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(125, 160, 220)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.8
-    stroke.Parent = btn
-
-    local gradient = Instance.new("UIGradient")
-    gradient.Rotation = 115
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(110, 145, 210)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(65, 86, 124)),
-    })
-    gradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.88),
-        NumberSequenceKeypoint.new(1, 0.97),
-    })
-    gradient.Parent = btn
-end
 
 local function highlightTab(sidebar: Frame, selectedBtn: TextButton)
     for _, child in ipairs(sidebar:GetChildren()) do
         if child:IsA("TextButton") then
             child.BackgroundColor3 = colors.Button
-            child.BackgroundTransparency = 0.5
         end
     end
-    selectedBtn.BackgroundColor3 = Color3.fromRGB(74, 122, 196)
-    selectedBtn.BackgroundTransparency = 0.25
+    selectedBtn.BackgroundColor3 = colors.Accent
 end
 
 local function createRebindRow(parent: Instance, labelText: string, defaultKey: Enum.KeyCode, onSet: (Enum.KeyCode)->(), state)
@@ -94,7 +40,10 @@ local function createRebindRow(parent: Instance, labelText: string, defaultKey: 
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
     btn.Parent = row
-    styleGlassButton(btn, 7)
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
         btn.Text = labelText .. ": Press a key..."
@@ -133,8 +82,6 @@ function Neo:CreateWindow(title: string)
         suppressKeyCode = nil,
         toggleKey = Enum.KeyCode.Insert,
         unloadKey = Enum.KeyCode.Delete,
-        isMenuOpen = true,
-        isAnimating = false,
     }
 
     local screenGui = Instance.new("ScreenGui")
@@ -149,11 +96,9 @@ function Neo:CreateWindow(title: string)
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
     mainFrame.Position = UDim2.new(0.5, -220, 0.5, -200)
     mainFrame.BackgroundColor3 = colors.Background
-    mainFrame.BackgroundTransparency = 0.32
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
     mainFrame.Draggable = true
-    mainFrame.ClipsDescendants = true
     mainFrame.Visible = true
     mainFrame.Parent = screenGui
     window.MainFrame = mainFrame
@@ -162,35 +107,11 @@ function Neo:CreateWindow(title: string)
     mainCorner.CornerRadius = UDim.new(0, 10)
     mainCorner.Parent = mainFrame
 
-    local glassGradient = Instance.new("UIGradient")
-    glassGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(112, 145, 210)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(38, 50, 74)),
-    })
-    glassGradient.Rotation = 115
-    glassGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.93),
-        NumberSequenceKeypoint.new(1, 0.99),
-    })
-    glassGradient.Parent = mainFrame
-
-    local glassStroke = Instance.new("UIStroke")
-    glassStroke.Color = Color3.fromRGB(88, 110, 146)
-    glassStroke.Thickness = 1
-    glassStroke.Transparency = 0.9
-    glassStroke.Parent = mainFrame
-
-    local menuScale = Instance.new("UIScale")
-    menuScale.Scale = 1
-    menuScale.Parent = mainFrame
-
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundColor3 = colors.Topbar
-    topBar.BackgroundTransparency = 0.4
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
-    styleGlassPanel(topBar, topBar.BackgroundTransparency)
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, -10, 1, 0)
@@ -208,7 +129,6 @@ function Neo:CreateWindow(title: string)
     sidebar.Size = UDim2.new(0, 150, 1, -40)
     sidebar.Position = UDim2.new(0, 0, 0, 40)
     sidebar.BackgroundColor3 = colors.Sidebar
-    sidebar.BackgroundTransparency = 0.45
     sidebar.BorderSizePixel = 0
     sidebar.ScrollBarThickness = 0
     sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -234,7 +154,6 @@ function Neo:CreateWindow(title: string)
     contentHolder.Size = UDim2.new(1, -150, 1, -40)
     contentHolder.Position = UDim2.new(0, 150, 0, 40)
     contentHolder.BackgroundColor3 = colors.Content
-    contentHolder.BackgroundTransparency = 0.45
     contentHolder.BorderSizePixel = 0
     contentHolder.ScrollBarThickness = 0
     contentHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -254,64 +173,8 @@ function Neo:CreateWindow(title: string)
     window._settingsCreated = false
     window._connections = {}
 
-    local showTweenInfo = TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    local showSettleTweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-    local hideTweenInfo = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-    local shownPosition = UDim2.new(0.5, -220, 0.5, -200)
-    local overshootPosition = UDim2.new(0.5, -220, 0.5, -206)
-    local hiddenPosition = UDim2.new(0.5, -220, 0.5, -170)
-
     function window:Toggle()
-        if self._state.isAnimating then
-            return
-        end
-
-        self._state.isAnimating = true
-        local openTarget = not self._state.isMenuOpen
-
-        if openTarget then
-            self.MainFrame.Visible = true
-            self.MainFrame.Position = hiddenPosition
-            menuScale.Scale = 0.8
-            self.MainFrame.BackgroundTransparency = 0.52
-
-            local showScaleTween = TweenService:Create(menuScale, showTweenInfo, { Scale = 1.03 })
-            local showPosTween = TweenService:Create(self.MainFrame, showTweenInfo, {
-                Position = overshootPosition,
-                BackgroundTransparency = 0.32,
-            })
-            showScaleTween:Play()
-            showPosTween:Play()
-
-            showPosTween.Completed:Once(function()
-                local settleScaleTween = TweenService:Create(menuScale, showSettleTweenInfo, { Scale = 1 })
-                local settlePosTween = TweenService:Create(self.MainFrame, showSettleTweenInfo, { Position = shownPosition })
-                settleScaleTween:Play()
-                settlePosTween:Play()
-
-                settlePosTween.Completed:Once(function()
-                    self._state.isMenuOpen = true
-                    self._state.isAnimating = false
-                end)
-            end)
-        else
-            local hideScaleTween = TweenService:Create(menuScale, hideTweenInfo, { Scale = 0.82 })
-            local hidePosTween = TweenService:Create(self.MainFrame, hideTweenInfo, {
-                Position = hiddenPosition,
-                BackgroundTransparency = 0.58,
-            })
-            hideScaleTween:Play()
-            hidePosTween:Play()
-
-            hidePosTween.Completed:Once(function()
-                self.MainFrame.BackgroundTransparency = 0.32
-                menuScale.Scale = 1
-                self.MainFrame.Position = shownPosition
-                self.MainFrame.Visible = false
-                self._state.isMenuOpen = false
-                self._state.isAnimating = false
-            end)
-        end
+        self.MainFrame.Visible = not self.MainFrame.Visible
     end
 
     function window:Destroy()
@@ -357,7 +220,10 @@ function Neo:_createSettingsTab()
     btn.AutoButtonColor = false
     btn.LayoutOrder = 1_000_000
     btn.Parent = self.Sidebar
-    styleGlassButton(btn, 7)
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
     local page = Instance.new("Frame")
     page.Name = "SettingsPage"
@@ -422,7 +288,10 @@ function Neo:CreateTab(name: string)
     self._tabOrder += 1
     btn.LayoutOrder = self._tabOrder
     btn.Parent = self.Sidebar
-    styleGlassButton(btn, 7)
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
@@ -496,7 +365,10 @@ function Neo:CreateButton(text: string, callback: ()->())
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
     btn.Parent = self.Page
-    styleGlassButton(btn, 7)
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
         if callback then callback() end
@@ -529,7 +401,10 @@ function Neo:CreateToggle(text: string, callback: (boolean)->())
     box.BorderSizePixel = 0
     box.AutoButtonColor = false
     box.Parent = frame
-    styleGlassButton(box, 7)
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = box
 
     local state = false
     box.MouseButton1Click:Connect(function()
@@ -574,15 +449,12 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     bar.Size = UDim2.new(1, 0, 0, 10)
     bar.Position = UDim2.new(0, 0, 0, 25)
     bar.BackgroundColor3 = colors.Button
-    bar.BackgroundTransparency = 0.45
     bar.BorderSizePixel = 0
     bar.Parent = frame
-    addCorner(bar, 6)
 
     local fill = Instance.new("Frame")
     fill.BackgroundColor3 = colors.Accent
     fill.BorderSizePixel = 0
-    addCorner(fill, 6)
     fill.Parent = bar
 
     local function roundToStep(value, step)
@@ -648,6 +520,200 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
+function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Color3)->())
+    defaultColor = defaultColor or colors.Accent
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 260, 0, 30)
+    frame.BackgroundTransparency = 1
+    frame.Parent = self.Page
+
+    local mainButton = Instance.new("TextButton")
+    mainButton.Size = UDim2.new(1, 0, 0, 30)
+    mainButton.BackgroundColor3 = colors.Button
+    mainButton.Text = ""
+    mainButton.BorderSizePixel = 0
+    mainButton.AutoButtonColor = false
+    mainButton.Parent = frame
+
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 6)
+    mainCorner.Parent = mainButton
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -85, 1, 0)
+    title.Position = UDim2.new(0, 10, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = text
+    title.Font = Enum.Font.Gotham
+    title.TextSize = 14
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = mainButton
+
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(0, 50, 1, 0)
+    valueLabel.Position = UDim2.new(1, -75, 0, 0)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = ""
+    valueLabel.Font = Enum.Font.Gotham
+    valueLabel.TextSize = 12
+    valueLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Parent = mainButton
+
+    local preview = Instance.new("Frame")
+    preview.Size = UDim2.new(0, 20, 0, 20)
+    preview.Position = UDim2.new(1, -25, 0.5, -10)
+    preview.BackgroundColor3 = defaultColor
+    preview.BorderSizePixel = 0
+    preview.Parent = mainButton
+
+    local previewCorner = Instance.new("UICorner")
+    previewCorner.CornerRadius = UDim.new(0, 5)
+    previewCorner.Parent = preview
+
+    local expandedHolder = Instance.new("Frame")
+    expandedHolder.Size = UDim2.new(1, 0, 0, 85)
+    expandedHolder.Position = UDim2.new(0, 0, 0, 35)
+    expandedHolder.BackgroundColor3 = colors.Sidebar
+    expandedHolder.BorderSizePixel = 0
+    expandedHolder.Visible = false
+    expandedHolder.Parent = frame
+
+    local holderCorner = Instance.new("UICorner")
+    holderCorner.CornerRadius = UDim.new(0, 6)
+    holderCorner.Parent = expandedHolder
+
+    local holderPadding = Instance.new("UIPadding")
+    holderPadding.PaddingTop = UDim.new(0, 8)
+    holderPadding.PaddingBottom = UDim.new(0, 8)
+    holderPadding.PaddingLeft = UDim.new(0, 8)
+    holderPadding.PaddingRight = UDim.new(0, 8)
+    holderPadding.Parent = expandedHolder
+
+    local holderLayout = Instance.new("UIListLayout")
+    holderLayout.FillDirection = Enum.FillDirection.Vertical
+    holderLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    holderLayout.Padding = UDim.new(0, 6)
+    holderLayout.Parent = expandedHolder
+
+    local currentColor = defaultColor
+    local isExpanded = false
+    local mainFrame = self._mainFrame
+
+    local function getRgbString(color: Color3)
+        return string.format("%d,%d,%d", math.floor(color.R * 255 + 0.5), math.floor(color.G * 255 + 0.5), math.floor(color.B * 255 + 0.5))
+    end
+
+    local function applyColor(color: Color3)
+        currentColor = color
+        preview.BackgroundColor3 = color
+        valueLabel.Text = getRgbString(color)
+        if callback then
+            callback(color)
+        end
+    end
+
+    local function createChannelSlider(labelText: string, getter: (Color3)->number, setter: (Color3, number)->Color3)
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, 0, 0, 18)
+        row.BackgroundTransparency = 1
+        row.Parent = expandedHolder
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0, 14, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = labelText
+        label.Font = Enum.Font.GothamBold
+        label.TextSize = 12
+        label.TextColor3 = Color3.fromRGB(220, 220, 220)
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = row
+
+        local bar = Instance.new("Frame")
+        bar.Size = UDim2.new(1, -22, 0, 8)
+        bar.Position = UDim2.new(0, 18, 0.5, -4)
+        bar.BackgroundColor3 = colors.Button
+        bar.BorderSizePixel = 0
+        bar.Parent = row
+
+        local barCorner = Instance.new("UICorner")
+        barCorner.CornerRadius = UDim.new(0, 4)
+        barCorner.Parent = bar
+
+        local fill = Instance.new("Frame")
+        fill.Size = UDim2.new(0, 0, 1, 0)
+        fill.BackgroundColor3 = colors.Accent
+        fill.BorderSizePixel = 0
+        fill.Parent = bar
+
+        local fillCorner = Instance.new("UICorner")
+        fillCorner.CornerRadius = UDim.new(0, 4)
+        fillCorner.Parent = fill
+
+        local dragging = false
+
+        local function syncFill()
+            fill.Size = UDim2.new(math.clamp(getter(currentColor), 0, 1), 0, 1, 0)
+        end
+
+        local function updateFromInput(input)
+            local rel = input.Position.X - bar.AbsolutePosition.X
+            local pct = math.clamp(rel / bar.AbsoluteSize.X, 0, 1)
+            applyColor(setter(currentColor, pct))
+            syncFill()
+        end
+
+        bar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                if mainFrame then
+                    mainFrame.Active = false
+                    mainFrame.Draggable = false
+                end
+                updateFromInput(input)
+            end
+        end)
+
+        bar.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+                if mainFrame then
+                    mainFrame.Active = true
+                    mainFrame.Draggable = true
+                end
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                updateFromInput(input)
+            end
+        end)
+
+        syncFill()
+    end
+
+    createChannelSlider("R", function(c) return c.R end, function(c, v) return Color3.new(v, c.G, c.B) end)
+    createChannelSlider("G", function(c) return c.G end, function(c, v) return Color3.new(c.R, v, c.B) end)
+    createChannelSlider("B", function(c) return c.B end, function(c, v) return Color3.new(c.R, c.G, v) end)
+
+    local function setExpanded(state: boolean)
+        isExpanded = state
+        expandedHolder.Visible = state
+        frame.Size = state and UDim2.new(0, 260, 0, 125) or UDim2.new(0, 260, 0, 30)
+    end
+
+    mainButton.MouseButton1Click:Connect(function()
+        setExpanded(not isExpanded)
+    end)
+
+    applyColor(defaultColor)
+
+    return frame
+end
+
 function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: (string) -> ())
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 260, 0, 30)
@@ -666,19 +732,20 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
     box.AutoButtonColor = false
     box.ZIndex = 11
     box.Parent = frame
-    styleGlassButton(box, 7)
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = box
 
     local list = Instance.new("Frame")
     list.Size = UDim2.new(1, 0, 0, 0)
     list.Position = UDim2.new(0, 0, 0, 30)
     list.BackgroundColor3 = colors.Sidebar
-    list.BackgroundTransparency = 0.34
     list.BorderSizePixel = 0
     list.ClipsDescendants = true
     list.Visible = false
     list.ZIndex = 20
     list.Parent = frame
-    addCorner(list, 8)
 
     local listLayout = Instance.new("UIListLayout")
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -722,7 +789,10 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
         optBtn.AutoButtonColor = false
         optBtn.ZIndex = 21
         optBtn.Parent = list
-        styleGlassButton(optBtn, 6)
+
+        local optCorner = Instance.new("UICorner")
+        optCorner.CornerRadius = UDim.new(0, 6)
+        optCorner.Parent = optBtn
 
         optBtn.MouseButton1Click:Connect(function()
             box.Text = option
@@ -731,12 +801,10 @@ function Neo:CreateDropdown(options: {string}, defaultOption: string, callback: 
         end)
 
         optBtn.MouseEnter:Connect(function()
-            optBtn.BackgroundColor3 = Color3.fromRGB(84, 146, 230)
-            optBtn.BackgroundTransparency = 0.22
+            optBtn.BackgroundColor3 = colors.Accent
         end)
         optBtn.MouseLeave:Connect(function()
-            optBtn.BackgroundColor3 = colors.Button
-            optBtn.BackgroundTransparency = 0.5
+            optBtn.BackgroundColor3 = colors.Sidebar
         end)
     end
 
