@@ -522,7 +522,7 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
-function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (number, number, number)->())
+function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (number, number, number, string)->())
     defaultColor = defaultColor or colors.Accent
 
     local frame = Instance.new("Frame")
@@ -567,7 +567,6 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (nu
     local preview = Instance.new("Frame")
     preview.Size = UDim2.new(0, 20, 0, 20)
     preview.Position = UDim2.new(1, -25, 0.5, -10)
-    preview.BackgroundColor3 = defaultColor
     preview.BorderSizePixel = 0
     preview.Parent = mainButton
 
@@ -577,7 +576,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (nu
 
     local parentGui = self._gui or (self._mainFrame and self._mainFrame.Parent) or frame.Parent
     local popup = Instance.new("Frame")
-    popup.Size = UDim2.new(0, 500, 0, 244)
+    popup.Size = UDim2.new(0, 325, 0, 159)
     popup.BackgroundColor3 = colors.Sidebar
     popup.BorderSizePixel = 0
     popup.Visible = false
@@ -589,142 +588,26 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (nu
     popupCorner.Parent = popup
 
     local popupPadding = Instance.new("UIPadding")
-    popupPadding.PaddingTop = UDim.new(0, 16)
-    popupPadding.PaddingBottom = UDim.new(0, 16)
-    popupPadding.PaddingLeft = UDim.new(0, 16)
-    popupPadding.PaddingRight = UDim.new(0, 16)
+    popupPadding.PaddingTop = UDim.new(0, 10)
+    popupPadding.PaddingBottom = UDim.new(0, 10)
+    popupPadding.PaddingLeft = UDim.new(0, 10)
+    popupPadding.PaddingRight = UDim.new(0, 10)
     popupPadding.Parent = popup
 
-    local pickerBody = Instance.new("Frame")
-    pickerBody.Size = UDim2.new(1, 0, 1, 0)
-    pickerBody.BackgroundTransparency = 1
-    pickerBody.ZIndex = 51
-    pickerBody.Parent = popup
+    local list = Instance.new("UIListLayout")
+    list.Padding = UDim.new(0, 8)
+    list.SortOrder = Enum.SortOrder.LayoutOrder
+    list.Parent = popup
 
-    local svPicker = Instance.new("Frame")
-    svPicker.Size = UDim2.new(1, -44, 1, 0)
-    svPicker.BackgroundColor3 = Color3.fromHSV(0, 1, 1)
-    svPicker.BorderSizePixel = 0
-    svPicker.ZIndex = 52
-    svPicker.Parent = pickerBody
+    local r = math.floor(defaultColor.R * 255 + 0.5)
+    local g = math.floor(defaultColor.G * 255 + 0.5)
+    local b = math.floor(defaultColor.B * 255 + 0.5)
+    local committedR, committedG, committedB = r, g, b
 
-    local svCorner = Instance.new("UICorner")
-    svCorner.CornerRadius = UDim.new(0, 5)
-    svCorner.Parent = svPicker
-
-    local satOverlay = Instance.new("Frame")
-    satOverlay.Size = UDim2.new(1, 0, 1, 0)
-    satOverlay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    satOverlay.BorderSizePixel = 0
-    satOverlay.ZIndex = 53
-    satOverlay.Parent = svPicker
-
-    local satGradient = Instance.new("UIGradient")
-    satGradient.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 255, 255))
-    satGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 1),
-    })
-    satGradient.Parent = satOverlay
-
-    local valOverlay = Instance.new("Frame")
-    valOverlay.Size = UDim2.new(1, 0, 1, 0)
-    valOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    valOverlay.BorderSizePixel = 0
-    valOverlay.ZIndex = 54
-    valOverlay.Parent = svPicker
-
-    local valGradient = Instance.new("UIGradient")
-    valGradient.Rotation = 90
-    valGradient.Color = ColorSequence.new(Color3.fromRGB(0, 0, 0), Color3.fromRGB(0, 0, 0))
-    valGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(1, 0),
-    })
-    valGradient.Parent = valOverlay
-
-    local svCursor = Instance.new("Frame")
-    svCursor.Size = UDim2.new(0, 12, 0, 12)
-    svCursor.AnchorPoint = Vector2.new(0.5, 0.5)
-    svCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    svCursor.BorderSizePixel = 0
-    svCursor.ZIndex = 55
-    svCursor.Parent = svPicker
-
-    local svCursorCorner = Instance.new("UICorner")
-    svCursorCorner.CornerRadius = UDim.new(1, 0)
-    svCursorCorner.Parent = svCursor
-
-    local svCursorStroke = Instance.new("UIStroke")
-    svCursorStroke.Color = Color3.fromRGB(0, 0, 0)
-    svCursorStroke.Thickness = 1
-    svCursorStroke.Parent = svCursor
-
-    local hueBar = Instance.new("Frame")
-    hueBar.Size = UDim2.new(0, 32, 1, 0)
-    hueBar.Position = UDim2.new(1, -32, 0, 0)
-    hueBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    hueBar.BorderSizePixel = 0
-    hueBar.ClipsDescendants = true
-    hueBar.ZIndex = 52
-    hueBar.Parent = pickerBody
-
-    local hueCorner = Instance.new("UICorner")
-    hueCorner.CornerRadius = UDim.new(0, 5)
-    hueCorner.Parent = hueBar
-
-    local HUE_MAX = 5 / 6 -- 0..300deg: red only at top, magenta at bottom
-
-    local hueStops = {
-        Color3.fromRGB(255, 0, 0),
-        Color3.fromRGB(255, 255, 0),
-        Color3.fromRGB(0, 255, 0),
-        Color3.fromRGB(0, 255, 255),
-        Color3.fromRGB(0, 0, 255),
-        Color3.fromRGB(255, 0, 255),
-    }
-
-    for i = 1, #hueStops - 1 do
-        local segment = Instance.new("Frame")
-        segment.Size = UDim2.new(1, 0, 1 / (#hueStops - 1), 1)
-        segment.Position = UDim2.new(0, 0, (i - 1) / (#hueStops - 1), 0)
-        segment.BackgroundColor3 = hueStops[i]
-        segment.BorderSizePixel = 0
-        segment.ZIndex = 53
-        segment.Parent = hueBar
-
-        local segmentGradient = Instance.new("UIGradient")
-        segmentGradient.Rotation = 90
-        segmentGradient.Color = ColorSequence.new(hueStops[i], hueStops[i + 1])
-        segmentGradient.Parent = segment
-    end
-
-    local hueCursor = Instance.new("Frame")
-    hueCursor.Size = UDim2.new(1, 0, 0, 4)
-    hueCursor.AnchorPoint = Vector2.new(0, 0.5)
-    hueCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    hueCursor.BorderSizePixel = 0
-    hueCursor.ZIndex = 55
-    hueCursor.Parent = hueBar
-
-    local hueCursorStroke = Instance.new("UIStroke")
-    hueCursorStroke.Color = Color3.fromRGB(0, 0, 0)
-    hueCursorStroke.Thickness = 1
-    hueCursorStroke.Parent = hueCursor
-
-    local committedColor = defaultColor
-    local liveColor = defaultColor
-    local defaultH, defaultS, defaultV = Color3.toHSV(defaultColor)
-    local currentH = (defaultH <= HUE_MAX) and defaultH or 0
-    local currentS, currentV = defaultS, defaultV
     local isOpen = false
-    local svDragging = false
-    local hueDragging = false
     local mainFrame = self._mainFrame
-
-    local function getRgbString(color: Color3)
-        return string.format("%d,%d,%d", math.floor(color.R * 255 + 0.5), math.floor(color.G * 255 + 0.5), math.floor(color.B * 255 + 0.5))
-    end
+    local activeDrag: string? = nil
+    local bars = {}
 
     local function pointIn(guiObj: GuiObject, x: number, y: number)
         local pos = guiObj.AbsolutePosition
@@ -732,30 +615,46 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (nu
         return x >= pos.X and x <= (pos.X + size.X) and y >= pos.Y and y <= (pos.Y + size.Y)
     end
 
-    local function updateDisplay(color: Color3)
-        liveColor = color
-        preview.BackgroundColor3 = color
-        valueLabel.Text = getRgbString(color)
+    local function rgbText(rr: number, gg: number, bb: number)
+        return string.format("%d,%02d,%02d", rr, gg, bb)
     end
 
-    local function updateVisualsFromHSV()
-        svPicker.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
-        svCursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
-        hueCursor.Position = UDim2.new(0, 0, currentH / HUE_MAX, 0)
+    local function color3FromRGB(rr: number, gg: number, bb: number)
+        return Color3.fromRGB(rr, gg, bb)
     end
 
-    local function applyFromHSV()
-        updateDisplay(Color3.fromHSV(currentH, currentS, currentV))
-        updateVisualsFromHSV()
+    local function updateDisplay()
+        preview.BackgroundColor3 = color3FromRGB(r, g, b)
+        valueLabel.Text = rgbText(r, g, b)
+    end
+
+    local function updateBarGradients()
+        if bars.R then
+            bars.R.gradient.Color = ColorSequence.new(color3FromRGB(0, g, b), color3FromRGB(255, g, b))
+            bars.R.cursor.Position = UDim2.new(r / 255, 0, 0.5, 0)
+            bars.R.value.Text = tostring(r)
+        end
+        if bars.G then
+            bars.G.gradient.Color = ColorSequence.new(color3FromRGB(r, 0, b), color3FromRGB(r, 255, b))
+            bars.G.cursor.Position = UDim2.new(g / 255, 0, 0.5, 0)
+            bars.G.value.Text = tostring(g)
+        end
+        if bars.B then
+            bars.B.gradient.Color = ColorSequence.new(color3FromRGB(r, g, 0), color3FromRGB(r, g, 255))
+            bars.B.cursor.Position = UDim2.new(b / 255, 0, 0.5, 0)
+            bars.B.value.Text = tostring(b)
+        end
+    end
+
+    local function syncUI()
+        updateDisplay()
+        updateBarGradients()
     end
 
     local function commitSelection()
-        committedColor = liveColor
+        committedR, committedG, committedB = r, g, b
         if callback then
-            local r = math.floor(committedColor.R * 255 + 0.5)
-            local g = math.floor(committedColor.G * 255 + 0.5)
-            local b = math.floor(committedColor.B * 255 + 0.5)
-            callback(r, g, b)
+            callback(r, g, b, rgbText(r, g, b))
         end
     end
 
@@ -770,14 +669,12 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (nu
         if not isOpen then return end
         isOpen = false
         popup.Visible = false
-        svDragging = false
-        hueDragging = false
+        activeDrag = nil
         if commit then
             commitSelection()
         else
-            local h, s, v = Color3.toHSV(committedColor)
-            currentH, currentS, currentV = ((h <= HUE_MAX) and h or 0), s, v
-            applyFromHSV()
+            r, g, b = committedR, committedG, committedB
+            syncUI()
         end
         if mainFrame then
             mainFrame.Active = true
@@ -792,81 +689,135 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (nu
         popup.Visible = true
     end
 
-    local function togglePopup()
+    local function createChannelRow(channel: string)
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, 0, 0, 37)
+        row.BackgroundTransparency = 1
+        row.ZIndex = 51
+        row.Parent = popup
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(0, 14, 1, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = channel
+        lbl.Font = Enum.Font.GothamBold
+        lbl.TextSize = 14
+        lbl.TextColor3 = Color3.fromRGB(220, 220, 220)
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = row
+
+        local value = Instance.new("TextLabel")
+        value.Size = UDim2.new(0, 34, 1, 0)
+        value.Position = UDim2.new(1, -34, 0, 0)
+        value.BackgroundTransparency = 1
+        value.Text = "0"
+        value.Font = Enum.Font.Gotham
+        value.TextSize = 13
+        value.TextColor3 = Color3.fromRGB(200, 200, 200)
+        value.TextXAlignment = Enum.TextXAlignment.Right
+        value.Parent = row
+
+        local bar = Instance.new("Frame")
+        bar.Size = UDim2.new(1, -58, 0, 12)
+        bar.Position = UDim2.new(0, 20, 0.5, -6)
+        bar.BackgroundColor3 = colors.Button
+        bar.BorderSizePixel = 0
+        bar.ZIndex = 52
+        bar.Parent = row
+
+        local barCorner = Instance.new("UICorner")
+        barCorner.CornerRadius = UDim.new(0, 5)
+        barCorner.Parent = bar
+
+        local grad = Instance.new("UIGradient")
+        grad.Rotation = 0
+        grad.Parent = bar
+
+        local cursor = Instance.new("Frame")
+        cursor.Size = UDim2.new(0, 4, 1, 4)
+        cursor.AnchorPoint = Vector2.new(0.5, 0.5)
+        cursor.Position = UDim2.new(0, 0, 0.5, 0)
+        cursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        cursor.BorderSizePixel = 0
+        cursor.ZIndex = 53
+        cursor.Parent = bar
+
+        local cursorCorner = Instance.new("UICorner")
+        cursorCorner.CornerRadius = UDim.new(0, 2)
+        cursorCorner.Parent = cursor
+
+        local cursorStroke = Instance.new("UIStroke")
+        cursorStroke.Color = Color3.fromRGB(0, 0, 0)
+        cursorStroke.Thickness = 1
+        cursorStroke.Parent = cursor
+
+        bars[channel] = {bar = bar, gradient = grad, cursor = cursor, value = value}
+
+        local function setChannelFromInput(input)
+            local relX = input.Position.X - bar.AbsolutePosition.X
+            local pct = math.clamp(relX / math.max(1, bar.AbsoluteSize.X), 0, 1)
+            local valueNum = math.floor(pct * 255 + 0.5)
+            if channel == "R" then
+                r = valueNum
+            elseif channel == "G" then
+                g = valueNum
+            else
+                b = valueNum
+            end
+            syncUI()
+        end
+
+        bar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                activeDrag = channel
+                if mainFrame then
+                    mainFrame.Active = false
+                    mainFrame.Draggable = false
+                end
+                setChannelFromInput(input)
+            end
+        end)
+
+        bar.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if activeDrag == channel then
+                    activeDrag = nil
+                end
+                if not activeDrag and mainFrame then
+                    mainFrame.Active = true
+                    mainFrame.Draggable = true
+                end
+            end
+        end)
+    end
+
+    createChannelRow("R")
+    createChannelRow("G")
+    createChannelRow("B")
+
+    mainButton.MouseButton1Click:Connect(function()
         if isOpen then
             closePopup(true)
         else
             openPopup()
         end
-    end
-
-    local function updateSV(input)
-        local relX = input.Position.X - svPicker.AbsolutePosition.X
-        local relY = input.Position.Y - svPicker.AbsolutePosition.Y
-        currentS = math.clamp(relX / math.max(1, svPicker.AbsoluteSize.X), 0, 1)
-        currentV = 1 - math.clamp(relY / math.max(1, svPicker.AbsoluteSize.Y), 0, 1)
-        applyFromHSV()
-    end
-
-    local function updateHue(input)
-        local relY = input.Position.Y - hueBar.AbsolutePosition.Y
-        local pct = math.clamp(relY / math.max(1, hueBar.AbsoluteSize.Y), 0, 1)
-        currentH = pct * HUE_MAX
-        applyFromHSV()
-    end
-
-    mainButton.MouseButton1Click:Connect(function()
-        togglePopup()
-    end)
-
-    svPicker.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            svDragging = true
-            if mainFrame then
-                mainFrame.Active = false
-                mainFrame.Draggable = false
-            end
-            updateSV(input)
-        end
-    end)
-
-    svPicker.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            svDragging = false
-            if not hueDragging and mainFrame then
-                mainFrame.Active = true
-                mainFrame.Draggable = true
-            end
-        end
-    end)
-
-    hueBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            hueDragging = true
-            if mainFrame then
-                mainFrame.Active = false
-                mainFrame.Draggable = false
-            end
-            updateHue(input)
-        end
-    end)
-
-    hueBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            hueDragging = false
-            if not svDragging and mainFrame then
-                mainFrame.Active = true
-                mainFrame.Draggable = true
-            end
-        end
     end)
 
     UserInputService.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
-            if svDragging then
-                updateSV(input)
-            elseif hueDragging then
-                updateHue(input)
+            if activeDrag and bars[activeDrag] then
+                local bar = bars[activeDrag].bar
+                local relX = input.Position.X - bar.AbsolutePosition.X
+                local pct = math.clamp(relX / math.max(1, bar.AbsoluteSize.X), 0, 1)
+                local valueNum = math.floor(pct * 255 + 0.5)
+                if activeDrag == "R" then
+                    r = valueNum
+                elseif activeDrag == "G" then
+                    g = valueNum
+                else
+                    b = valueNum
+                end
+                syncUI()
             elseif isOpen then
                 placePopup()
             end
@@ -879,16 +830,14 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (nu
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 
         local x, y = input.Position.X, input.Position.Y
-        if pointIn(mainButton, x, y) or pointIn(popup, x, y) then
+        if pointIn(popup, x, y) then
             return
         end
 
         closePopup(true)
     end)
 
-    updateDisplay(committedColor)
-    updateVisualsFromHSV()
-
+    syncUI()
     return frame
 end
 
