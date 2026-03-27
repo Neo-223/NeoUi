@@ -522,7 +522,7 @@ function Neo:CreateSlider(text: string, min: number, max: number, defaultValue: 
     return frame
 end
 
-function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Color3)->())
+function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (number, number, number)->())
     defaultColor = defaultColor or colors.Accent
 
     local frame = Instance.new("Frame")
@@ -577,7 +577,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
 
     local parentGui = self._gui or (self._mainFrame and self._mainFrame.Parent) or frame.Parent
     local popup = Instance.new("Frame")
-    popup.Size = UDim2.new(0, 250, 0, 122)
+    popup.Size = UDim2.new(0, 500, 0, 244)
     popup.BackgroundColor3 = colors.Sidebar
     popup.BorderSizePixel = 0
     popup.Visible = false
@@ -589,10 +589,10 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     popupCorner.Parent = popup
 
     local popupPadding = Instance.new("UIPadding")
-    popupPadding.PaddingTop = UDim.new(0, 8)
-    popupPadding.PaddingBottom = UDim.new(0, 8)
-    popupPadding.PaddingLeft = UDim.new(0, 8)
-    popupPadding.PaddingRight = UDim.new(0, 8)
+    popupPadding.PaddingTop = UDim.new(0, 16)
+    popupPadding.PaddingBottom = UDim.new(0, 16)
+    popupPadding.PaddingLeft = UDim.new(0, 16)
+    popupPadding.PaddingRight = UDim.new(0, 16)
     popupPadding.Parent = popup
 
     local pickerBody = Instance.new("Frame")
@@ -602,7 +602,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     pickerBody.Parent = popup
 
     local svPicker = Instance.new("Frame")
-    svPicker.Size = UDim2.new(1, -26, 1, 0)
+    svPicker.Size = UDim2.new(1, -44, 1, 0)
     svPicker.BackgroundColor3 = Color3.fromHSV(0, 1, 1)
     svPicker.BorderSizePixel = 0
     svPicker.ZIndex = 52
@@ -644,7 +644,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     valGradient.Parent = valOverlay
 
     local svCursor = Instance.new("Frame")
-    svCursor.Size = UDim2.new(0, 8, 0, 8)
+    svCursor.Size = UDim2.new(0, 12, 0, 12)
     svCursor.AnchorPoint = Vector2.new(0.5, 0.5)
     svCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     svCursor.BorderSizePixel = 0
@@ -661,8 +661,8 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     svCursorStroke.Parent = svCursor
 
     local hueBar = Instance.new("Frame")
-    hueBar.Size = UDim2.new(0, 16, 1, 0)
-    hueBar.Position = UDim2.new(1, -16, 0, 0)
+    hueBar.Size = UDim2.new(0, 32, 1, 0)
+    hueBar.Position = UDim2.new(1, -32, 0, 0)
     hueBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     hueBar.BorderSizePixel = 0
     hueBar.ClipsDescendants = true
@@ -673,6 +673,8 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     hueCorner.CornerRadius = UDim.new(0, 5)
     hueCorner.Parent = hueBar
 
+    local HUE_MAX = 5 / 6 -- 0..300deg: red only at top, magenta at bottom
+
     local hueStops = {
         Color3.fromRGB(255, 0, 0),
         Color3.fromRGB(255, 255, 0),
@@ -680,7 +682,6 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
         Color3.fromRGB(0, 255, 255),
         Color3.fromRGB(0, 0, 255),
         Color3.fromRGB(255, 0, 255),
-        Color3.fromRGB(255, 0, 0),
     }
 
     for i = 1, #hueStops - 1 do
@@ -699,7 +700,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     end
 
     local hueCursor = Instance.new("Frame")
-    hueCursor.Size = UDim2.new(1, 0, 0, 2)
+    hueCursor.Size = UDim2.new(1, 0, 0, 4)
     hueCursor.AnchorPoint = Vector2.new(0, 0.5)
     hueCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     hueCursor.BorderSizePixel = 0
@@ -713,7 +714,9 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
 
     local committedColor = defaultColor
     local liveColor = defaultColor
-    local currentH, currentS, currentV = Color3.toHSV(defaultColor)
+    local defaultH, defaultS, defaultV = Color3.toHSV(defaultColor)
+    local currentH = (defaultH <= HUE_MAX) and defaultH or 0
+    local currentS, currentV = defaultS, defaultV
     local isOpen = false
     local svDragging = false
     local hueDragging = false
@@ -738,7 +741,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     local function updateVisualsFromHSV()
         svPicker.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
         svCursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
-        hueCursor.Position = UDim2.new(0, 0, currentH, 0)
+        hueCursor.Position = UDim2.new(0, 0, currentH / HUE_MAX, 0)
     end
 
     local function applyFromHSV()
@@ -749,7 +752,10 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     local function commitSelection()
         committedColor = liveColor
         if callback then
-            callback(committedColor)
+            local r = math.floor(committedColor.R * 255 + 0.5)
+            local g = math.floor(committedColor.G * 255 + 0.5)
+            local b = math.floor(committedColor.B * 255 + 0.5)
+            callback(r, g, b)
         end
     end
 
@@ -770,7 +776,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
             commitSelection()
         else
             local h, s, v = Color3.toHSV(committedColor)
-            currentH, currentS, currentV = h, s, v
+            currentH, currentS, currentV = ((h <= HUE_MAX) and h or 0), s, v
             applyFromHSV()
         end
         if mainFrame then
@@ -804,10 +810,8 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
 
     local function updateHue(input)
         local relY = input.Position.Y - hueBar.AbsolutePosition.Y
-        currentH = math.clamp(relY / math.max(1, hueBar.AbsoluteSize.Y), 0, 1)
-        if currentH >= 0.999 then
-            currentH = 0
-        end
+        local pct = math.clamp(relY / math.max(1, hueBar.AbsoluteSize.Y), 0, 1)
+        currentH = pct * HUE_MAX
         applyFromHSV()
     end
 
