@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
 local Neo = {}
@@ -82,6 +83,8 @@ function Neo:CreateWindow(title: string)
         suppressKeyCode = nil,
         toggleKey = Enum.KeyCode.Insert,
         unloadKey = Enum.KeyCode.Delete,
+        isMenuOpen = true,
+        isAnimating = false,
     }
 
     local screenGui = Instance.new("ScreenGui")
@@ -96,9 +99,11 @@ function Neo:CreateWindow(title: string)
     mainFrame.Size = UDim2.new(0, 440, 0, 400)
     mainFrame.Position = UDim2.new(0.5, -220, 0.5, -200)
     mainFrame.BackgroundColor3 = colors.Background
+    mainFrame.BackgroundTransparency = 0.14
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
     mainFrame.Draggable = true
+    mainFrame.ClipsDescendants = true
     mainFrame.Visible = true
     mainFrame.Parent = screenGui
     window.MainFrame = mainFrame
@@ -107,9 +112,32 @@ function Neo:CreateWindow(title: string)
     mainCorner.CornerRadius = UDim.new(0, 10)
     mainCorner.Parent = mainFrame
 
+    local glassGradient = Instance.new("UIGradient")
+    glassGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(175, 190, 220)),
+    })
+    glassGradient.Rotation = 115
+    glassGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.9),
+        NumberSequenceKeypoint.new(1, 0.98),
+    })
+    glassGradient.Parent = mainFrame
+
+    local glassStroke = Instance.new("UIStroke")
+    glassStroke.Color = Color3.fromRGB(190, 210, 240)
+    glassStroke.Thickness = 1
+    glassStroke.Transparency = 0.75
+    glassStroke.Parent = mainFrame
+
+    local menuScale = Instance.new("UIScale")
+    menuScale.Scale = 1
+    menuScale.Parent = mainFrame
+
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundColor3 = colors.Topbar
+    topBar.BackgroundTransparency = 0.2
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
 
@@ -129,6 +157,7 @@ function Neo:CreateWindow(title: string)
     sidebar.Size = UDim2.new(0, 150, 1, -40)
     sidebar.Position = UDim2.new(0, 0, 0, 40)
     sidebar.BackgroundColor3 = colors.Sidebar
+    sidebar.BackgroundTransparency = 0.22
     sidebar.BorderSizePixel = 0
     sidebar.ScrollBarThickness = 0
     sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -154,6 +183,7 @@ function Neo:CreateWindow(title: string)
     contentHolder.Size = UDim2.new(1, -150, 1, -40)
     contentHolder.Position = UDim2.new(0, 150, 0, 40)
     contentHolder.BackgroundColor3 = colors.Content
+    contentHolder.BackgroundTransparency = 0.2
     contentHolder.BorderSizePixel = 0
     contentHolder.ScrollBarThickness = 0
     contentHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -173,8 +203,45 @@ function Neo:CreateWindow(title: string)
     window._settingsCreated = false
     window._connections = {}
 
+    local showTweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local hideTweenInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+    local shownPosition = UDim2.new(0.5, -220, 0.5, -200)
+    local hiddenPosition = UDim2.new(0.5, -220, 0.5, -184)
+
     function window:Toggle()
-        self.MainFrame.Visible = not self.MainFrame.Visible
+        if self._state.isAnimating then
+            return
+        end
+
+        self._state.isAnimating = true
+        local openTarget = not self._state.isMenuOpen
+
+        if openTarget then
+            self.MainFrame.Visible = true
+            self.MainFrame.Position = hiddenPosition
+            menuScale.Scale = 0.94
+
+            local showScaleTween = TweenService:Create(menuScale, showTweenInfo, { Scale = 1 })
+            local showPosTween = TweenService:Create(self.MainFrame, showTweenInfo, { Position = shownPosition })
+            showScaleTween:Play()
+            showPosTween:Play()
+
+            showPosTween.Completed:Once(function()
+                self._state.isMenuOpen = true
+                self._state.isAnimating = false
+            end)
+        else
+            local hideScaleTween = TweenService:Create(menuScale, hideTweenInfo, { Scale = 0.94 })
+            local hidePosTween = TweenService:Create(self.MainFrame, hideTweenInfo, { Position = hiddenPosition })
+            hideScaleTween:Play()
+            hidePosTween:Play()
+
+            hidePosTween.Completed:Once(function()
+                self.MainFrame.Visible = false
+                self._state.isMenuOpen = false
+                self._state.isAnimating = false
+            end)
+        end
     end
 
     function window:Destroy()
