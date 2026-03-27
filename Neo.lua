@@ -665,6 +665,7 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     hueBar.Position = UDim2.new(1, -16, 0, 0)
     hueBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     hueBar.BorderSizePixel = 0
+    hueBar.ClipsDescendants = true
     hueBar.ZIndex = 52
     hueBar.Parent = pickerBody
 
@@ -672,18 +673,30 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     hueCorner.CornerRadius = UDim.new(0, 5)
     hueCorner.Parent = hueBar
 
-    local hueGradient = Instance.new("UIGradient")
-    hueGradient.Rotation = 90
-    hueGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0.00, Color3.fromHSV(0.00, 1, 1)),
-        ColorSequenceKeypoint.new(0.16, Color3.fromHSV(0.16, 1, 1)),
-        ColorSequenceKeypoint.new(0.33, Color3.fromHSV(0.33, 1, 1)),
-        ColorSequenceKeypoint.new(0.50, Color3.fromHSV(0.50, 1, 1)),
-        ColorSequenceKeypoint.new(0.66, Color3.fromHSV(0.66, 1, 1)),
-        ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
-        ColorSequenceKeypoint.new(1.00, Color3.fromHSV(1.00, 1, 1)),
-    })
-    hueGradient.Parent = hueBar
+    local hueStops = {
+        Color3.fromRGB(255, 0, 0),
+        Color3.fromRGB(255, 255, 0),
+        Color3.fromRGB(0, 255, 0),
+        Color3.fromRGB(0, 255, 255),
+        Color3.fromRGB(0, 0, 255),
+        Color3.fromRGB(255, 0, 255),
+        Color3.fromRGB(255, 0, 0),
+    }
+
+    for i = 1, #hueStops - 1 do
+        local segment = Instance.new("Frame")
+        segment.Size = UDim2.new(1, 0, 1 / (#hueStops - 1), 1)
+        segment.Position = UDim2.new(0, 0, (i - 1) / (#hueStops - 1), 0)
+        segment.BackgroundColor3 = hueStops[i]
+        segment.BorderSizePixel = 0
+        segment.ZIndex = 53
+        segment.Parent = hueBar
+
+        local segmentGradient = Instance.new("UIGradient")
+        segmentGradient.Rotation = 90
+        segmentGradient.Color = ColorSequence.new(hueStops[i], hueStops[i + 1])
+        segmentGradient.Parent = segment
+    end
 
     local hueCursor = Instance.new("Frame")
     hueCursor.Size = UDim2.new(1, 0, 0, 2)
@@ -792,6 +805,9 @@ function Neo:CreateColorPicker(text: string, defaultColor: Color3, callback: (Co
     local function updateHue(input)
         local relY = input.Position.Y - hueBar.AbsolutePosition.Y
         currentH = math.clamp(relY / math.max(1, hueBar.AbsoluteSize.Y), 0, 1)
+        if currentH >= 0.999 then
+            currentH = 0
+        end
         applyFromHSV()
     end
 
